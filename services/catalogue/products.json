@@ -1,0 +1,178 @@
+[
+  {
+    "id": 1,
+    "name": "Orange Fox",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["fox", "animal", "orange"],
+    "short_description": "A clever little fox with sharp folds.",
+    "description": "A clever little fox sitting upright, its sharp folds capturing the sly tilt of its ears and the mischief in its stance.",
+    "image_url": "/static/images/origami/001-origami-orange-fox.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 2,
+    "name": "Green Bird",
+    "category": "Bird",
+    "difficulty": "Medium",
+    "tags": ["bird", "animal", "green"],
+    "short_description": "A tall, angular bird ready to leap.",
+    "description": "A tall, angular bird with its head raised high, almost as if about to leap into the sky.",
+    "image_url": "/static/images/origami/002-origami-green-bird.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 3,
+    "name": "Grey Elephant",
+    "category": "Animal",
+    "difficulty": "Hard",
+    "tags": ["elephant", "animal", "grey"],
+    "short_description": "Strong yet gentle, trunk lowered.",
+    "description": "Strong yet gentle, this folded elephant stands proudly, trunk lowered in calm elegance.",
+    "image_url": "/static/images/origami/003-origami-grey-elephant.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 4,
+    "name": "Blue Rabbit",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["rabbit", "animal", "blue"],
+    "short_description": "Alert bunny with long ears.",
+    "description": "Perched on alert hind legs, its long ears stretch high as if listening for the faintest sound.",
+    "image_url": "/static/images/origami/004-origami-blue-rabbit.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 5,
+    "name": "Yellow Duck",
+    "category": "Bird",
+    "difficulty": "Easy",
+    "tags": ["duck", "bird", "yellow"],
+    "short_description": "Playful duck with rounded body.",
+    "description": "A playful duck floating in stillness, with a rounded body and folded beak pointed curiously forward.",
+    "image_url": "/static/images/origami/005-origami-yellow-duck.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 6,
+    "name": "Brown Bear",
+    "category": "Animal",
+    "difficulty": "Medium",
+    "tags": ["bear", "animal", "brown"],
+    "short_description": "Sturdy bear, slow and steady.",
+    "description": "A sturdy bear figure, its solid folds suggesting strength and slow, steady movement.",
+    "image_url": "/static/images/origami/006-origami-brown-bear.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 7,
+    "name": "Pink Rabbit",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["rabbit", "animal", "pink"],
+    "short_description": "Light bunny, ears perked up.",
+    "description": "A softer, lighter bunny sitting neatly, ears perked up with a sense of curiosity.",
+    "image_url": "/static/images/origami/007-origami-pink-rabbit.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 8,
+    "name": "Golden Dog",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["dog", "animal", "golden"],
+    "short_description": "Loyal dog, ready to wag tail.",
+    "description": "A loyal companion, folded into a pose that looks ready to wag its tail.",
+    "image_url": "/static/images/origami/008-origami-golden-dog.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 9,
+    "name": "Blue Crow",
+    "category": "Bird",
+    "difficulty": "Medium",
+    "tags": ["crow", "bird", "blue"],
+    "short_description": "Angular crow, ready to hop.",
+    "description": "Sleek and angular, this bird leans forward as though about to hop into flight.",
+    "image_url": "/static/images/origami/009-origami-blue-crow.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 10,
+    "name": "Tan Cat",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["cat", "animal", "tan"],
+    "short_description": "Upright cat, quiet watchfulness.",
+    "description": "A small, upright cat with pointy ears and a folded posture that radiates quiet watchfulness.",
+    "image_url": "/static/images/origami/010-origami-tan-cat.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 11,
+    "name": "Green Frog",
+    "category": "Animal",
+    "difficulty": "Medium",
+    "tags": ["frog", "animal", "green"],
+    "short_description": "Wide folds, ready to spring.",
+    "description": "Low to the ground with wide folds, ready to spring forward at any moment.",
+    "image_url": "/static/images/origami/011-origami-green-jfrog.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 12,
+    "name": "Orange Crane",
+    "category": "Bird",
+    "difficulty": "Medium",
+    "tags": ["crane", "bird", "orange"],
+    "short_description": "Classic crane, wings spread wide.",
+    "description": "A timeless origami classic, wings spread wide in graceful balance.",
+    "image_url": "/static/images/origami/012-origami-orange-crane.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 13,
+    "name": "Green Turtle",
+    "category": "Animal",
+    "difficulty": "Medium",
+    "tags": ["turtle", "animal", "green"],
+    "short_description": "Folded shell, hexagonal back.",
+    "description": "Steady and enduring, its folded shell forms a perfect hexagonal back.",
+    "image_url": "/static/images/origami/013-origami-green-turtle.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 14,
+    "name": "Red Butterfly",
+    "category": "Insect",
+    "difficulty": "Easy",
+    "tags": ["butterfly", "insect", "red"],
+    "short_description": "Symmetrical wings, fleeting dance.",
+    "description": "Wings open in symmetry, delicate folds suggesting a fleeting dance in the air.",
+    "image_url": "/static/images/origami/014-origami-red-butterfly.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 15,
+    "name": "Yellow Bird",
+    "category": "Bird",
+    "difficulty": "Easy",
+    "tags": ["bird", "yellow"],
+    "short_description": "Tiny songbird, ready to chirp.",
+    "description": "A tiny folded songbird, perched as if about to chirp.",
+    "image_url": "/static/images/origami/015-origami-yellow-bird.jpg",
+    "created_at": "2025-08-25"
+  },
+  {
+    "id": 16,
+    "name": "Gray Fish",
+    "category": "Animal",
+    "difficulty": "Easy",
+    "tags": ["fish", "animal", "gray"],
+    "short_description": "Streamlined fish, gliding waters.",
+    "description": "Sleek and streamlined, folded in a way that makes it seem to glide through invisible waters.",
+    "image_url": "/static/images/origami/016-origami-gray-fish.jpg",
+    "created_at": "2025-08-25"
+  }
+]
