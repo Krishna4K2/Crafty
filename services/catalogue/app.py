@@ -41,16 +41,21 @@ def get_products():
     if data_source == "db":
         conn = get_db_connection()
         cur = conn.cursor()
-        cur.execute('SELECT * FROM products;')
+        cur.execute('SELECT id, name, category, difficulty, tags, short_description, description, image_url, created_at FROM products;')
         db_products = cur.fetchall()
         products_dict = [
             {
-                'id': curr_product[0],
-                'description': curr_product[1],
-                'image_url': curr_product[2],
-                'name': curr_product[3]
+                'id': row[0],
+                'name': row[1],
+                'category': row[2],
+                'difficulty': row[3],
+                'tags': row[4],
+                'short_description': row[5],
+                'description': row[6],
+                'image_url': row[7],
+                'created_at': str(row[8]) if row[8] else None
             }
-            for curr_product in db_products
+            for row in db_products
         ]
         cur.close()
         conn.close()
