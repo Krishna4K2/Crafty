@@ -87,7 +87,9 @@ pip install -r requirements.txt
 ## 6. Run the APP and PostgrSQL with Docker Compose
 
 ```sh
-docker compose --env-file .env up --build
+docker compose --env-file .env up --build -d
+
+docker compose logs # to view the logs
 ```
 - The app will be available at [http://localhost:5000](http://localhost:5000)
 - PostgreSQL will run in a separate container and persist data in a Docker volume.
