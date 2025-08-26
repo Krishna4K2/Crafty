@@ -28,9 +28,9 @@
 
 
             <aside id="system-info">
-          <h2>App Version</h2>		
-	  <div id="version-circle">{{ version }}</div>
-	  <h2>System Information</h2>
+              <h2>App Version</h2>
+              <div id="version-circle">{{ version }}</div>
+              <h2>System Information</h2>
             <p><strong>Hostname:</strong> {{ system_info.hostname }}</p>
             <p><strong>IP Address:</strong> {{ system_info.ip_address }}</p>
             <p><strong>Running in Container:</strong> {{ "Yes" if system_info.is_container else "No" }}</p>
