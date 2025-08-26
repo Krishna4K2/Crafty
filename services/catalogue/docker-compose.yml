@@ -1,0 +1,32 @@
+version: "3.8"
+
+services:
+  catalogue-app:
+    build: .
+    container_name: catalogue-app
+    ports:
+      - "5000:5000"
+    environment:
+      - DB_HOST=${DB_HOST}
+      - DB_NAME=${DB_NAME}
+      - DB_USER=${DB_USER}
+      - DB_PASSWORD=${DB_PASSWORD}
+      - DATA_SOURCE=${DATA_SOURCE}
+    depends_on:
+      - postgres
+
+  postgres:
+    image: postgres:15
+    container_name: crafty-postgres
+    restart: always
+    environment:
+      - POSTGRES_DB=${POSTGRES_DB}
+      - POSTGRES_USER=${DB_USER}
+      - POSTGRES_PASSWORD=${DB_PASSWORD}
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
