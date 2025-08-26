@@ -50,13 +50,29 @@ mvnw.cmd clean
 
 The built JAR will be located in the `target/` folder, e.g. `target/voting-0.0.1-SNAPSHOT.jar`.
 
-### Run the Service
+
+### Run the Service (Locally)
 1. Start the application with:
   ```sh
   java -jar target/voting-0.0.1-SNAPSHOT.jar
   ```
 2. The service will start on port **8086** by default.
 3. Access the app in your browser at [http://localhost:8086](http://localhost:8086)
+
+### Build & Run with Docker
+You do NOT need to build the JAR locally. The Docker build will handle everything.
+
+**Build the Docker image:**
+```sh
+docker build -t voting-app .
+```
+
+**Run the Docker container:**
+```sh
+docker run -p 8086:8086 voting-app
+```
+
+The service will be available at [http://localhost:8086](http://localhost:8086)
 
 ### Notes
 - Make sure no other service is running on port 8086.
