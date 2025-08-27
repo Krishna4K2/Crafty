@@ -4,13 +4,19 @@ import jakarta.persistence.Entity;
 import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
+import com.fasterxml.jackson.annotation.JsonProperty;
 
 @Entity
 public class Origami {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @JsonProperty("origamiId")
     private Long origamiId;
+
+    @JsonProperty("name")
     private String name;
+
+    @JsonProperty("votes")
     private int votes;
 
     public Long getOrigamiId() { return origamiId; }

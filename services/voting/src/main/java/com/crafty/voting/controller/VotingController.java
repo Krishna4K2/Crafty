@@ -1,4 +1,4 @@
-package com.example.voting.controller;
+package com.crafty.voting.controller;
 
 import com.crafty.voting.service.OrigamiService;
 import com.crafty.voting.model.Origami;
@@ -56,5 +56,20 @@ public class VotingController {
             .orElseThrow(() -> new RuntimeException("Origami Not Found"));
         origami.setVotes(origami.getVotes() + 1);
         return origamiService.saveOrUpdateOrigami(origami);
+    }
+
+    @GetMapping("/status")
+    public ResponseEntity<String> getVotingServiceStatus() {
+        try {
+            // Check if we can access the database and synchronization is working
+            long origamiCount = origamiRepository.count();
+            if (origamiCount >= 0) { // Basic check that database is accessible
+                return ResponseEntity.ok("{\"status\":\"up\",\"message\":\"Voting Service is Online\"}");
+            } else {
+                return ResponseEntity.status(503).body("{\"status\":\"down\",\"message\":\"Database not accessible\"}");
+            }
+        } catch (Exception e) {
+            return ResponseEntity.status(503).body("{\"status\":\"down\",\"message\":\"Service unavailable: " + e.getMessage() + "\"}");
+        }
     }
 }

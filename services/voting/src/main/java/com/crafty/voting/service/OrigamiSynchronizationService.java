@@ -2,6 +2,7 @@ package com.crafty.voting.service;
 
 import com.crafty.voting.config.AppProperties;
 import com.crafty.voting.model.Origami;
+import com.crafty.voting.model.CatalogueProductDTO;
 import com.crafty.voting.repository.jpa.OrigamiRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,20 +39,26 @@ public class OrigamiSynchronizationService {
     @Scheduled(fixedRate = 60000) // 1 minute = 60000 ms
     public void synchronizeOrigamis() {
     try {
-        List<Origami> origamis = fetchOrigamisFromCatalogueService();
-        for (Origami origami : origamis) {
-            if (origami.getOrigamiId() != null) { // Check if ID is not null
-                Optional<Origami> existingOrigami = origamiRepository.findById(origami.getOrigamiId());
+        List<CatalogueProductDTO> catalogueProducts = fetchOrigamisFromCatalogueService();
+        for (CatalogueProductDTO product : catalogueProducts) {
+            if (product.getId() != null) { // Check if ID is not null
+                Optional<Origami> existingOrigami = origamiRepository.findById(product.getId());
                 if (!existingOrigami.isPresent()) {
-                    origamiRepository.save(origami);
+                    Origami newOrigami = new Origami();
+                    newOrigami.setOrigamiId(product.getId());
+                    newOrigami.setName(product.getName());
+                    newOrigami.setVotes(0); // Initialize with 0 votes
+                    origamiRepository.save(newOrigami);
+                    log.info("Added new origami: {} with ID: {}", product.getName(), product.getId());
                 } else {
                     Origami updatedOrigami = existingOrigami.get();
-                    updatedOrigami.setName(origami.getName());
-                    // updatedOrigami.setVotes(origami.getVotes());
+                    updatedOrigami.setName(product.getName());
+                    // Preserve existing votes
                     origamiRepository.save(updatedOrigami);
+                    log.info("Updated existing origami: {} with ID: {}", product.getName(), product.getId());
                 }
             } else {
-                log.warn("Skipped Origami with null ID");
+                log.warn("Skipped product with null ID");
             }
         }
     } catch (Exception e) {
@@ -62,12 +69,12 @@ public class OrigamiSynchronizationService {
 
 
 
-    private List<Origami> fetchOrigamisFromCatalogueService() {
+    private List<CatalogueProductDTO> fetchOrigamisFromCatalogueService() {
     try {
-        Origami[] origamisArray = restTemplate.getForObject(catalogueServiceUrl, Origami[].class);
-        List<Origami> origamis = Arrays.asList(origamisArray);
-        origamis.forEach(origami -> log.info("Fetched Origami with ID: {}", origami.getOrigamiId()));  // Log each ID
-        return origamis;
+        CatalogueProductDTO[] productsArray = restTemplate.getForObject(catalogueServiceUrl, CatalogueProductDTO[].class);
+        List<CatalogueProductDTO> products = Arrays.asList(productsArray);
+        products.forEach(product -> log.info("Fetched product with ID: {} and name: {}", product.getId(), product.getName()));
+        return products;
     } catch (RestClientException e) {
         log.error("Failed to fetch origamis from catalogue service: " + e.getMessage(), e);
         return Collections.emptyList();
