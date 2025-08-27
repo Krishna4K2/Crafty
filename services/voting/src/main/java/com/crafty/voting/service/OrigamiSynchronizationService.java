@@ -41,7 +41,7 @@ public class OrigamiSynchronizationService {
         List<Origami> origamis = fetchOrigamisFromCatalogueService();
         for (Origami origami : origamis) {
             if (origami.getOrigamiId() != null) { // Check if ID is not null
-                Optional<Origami> existingOrigami = origamiRepository.findById(convertId(origami.getOrigamiId()));
+                Optional<Origami> existingOrigami = origamiRepository.findById(origami.getOrigamiId());
                 if (!existingOrigami.isPresent()) {
                     origamiRepository.save(origami);
                 } else {
@@ -59,13 +59,7 @@ public class OrigamiSynchronizationService {
     }
     }
 
-    private Long convertId(String id) {
-        try {
-            return Long.valueOf(id);
-        } catch (Exception e) {
-            return null;
-        }
-    }
+
 
 
     private List<Origami> fetchOrigamisFromCatalogueService() {

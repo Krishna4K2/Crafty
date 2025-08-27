@@ -9,12 +9,12 @@ import jakarta.persistence.GenerationType;
 public class Origami {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private String origamiId;
+    private Long origamiId;
     private String name;
     private int votes;
 
-    public String getOrigamiId() { return origamiId; }
-    public void setOrigamiId(String origamiId) { this.origamiId = origamiId; }
+    public Long getOrigamiId() { return origamiId; }
+    public void setOrigamiId(Long origamiId) { this.origamiId = origamiId; }
 
     public String getName() { return name; }
     public void setName(String name) { this.name = name; }

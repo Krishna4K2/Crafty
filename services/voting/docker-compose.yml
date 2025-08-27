@@ -7,8 +7,8 @@ services:
     ports:
       - "8086:8086"
     environment:
-      # Set SPRING_PROFILES_ACTIVE to 'h2' or 'mongo' to select the DB profile
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-h2}
+      # Always use MongoDB profile in Compose
+      - SPRING_PROFILES_ACTIVE=mongo
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/votingdb
     depends_on:
       - mongo

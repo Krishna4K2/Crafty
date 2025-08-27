@@ -6,6 +6,7 @@ import org.springframework.stereotype.Service;
 import com.crafty.voting.model.Origami;
 import com.crafty.voting.repository.jpa.OrigamiRepository;
 import com.crafty.voting.repository.mongo.OrigamiMongoRepository;
+import org.springframework.core.env.Environment;
 
 import java.util.Optional;
 
@@ -15,14 +16,14 @@ public class OrigamiService {
     @Autowired
     private OrigamiRepository origamiRepository;
 
-    @Autowired
+    @Autowired(required = false)
     private OrigamiMongoRepository origamiMongoRepository;
 
     @Autowired
     private Environment env;
 
     public Optional<Origami> getOrigamiById(String id) {
-        if (isMongoProfile()) {
+        if (isMongoProfile() && origamiMongoRepository != null) {
             return origamiMongoRepository.findById(id);
         } else {
             try {
@@ -35,7 +36,7 @@ public class OrigamiService {
     }
 
     public Origami saveOrUpdateOrigami(Origami origami) {
-        if (isMongoProfile()) {
+        if (isMongoProfile() && origamiMongoRepository != null) {
             return origamiMongoRepository.save(origami);
         } else {
             return origamiRepository.save(origami);
