@@ -1,0 +1,25 @@
+version: "3.8"
+
+services:
+  voting-app:
+    build: .
+    container_name: voting-app
+    ports:
+      - "8086:8086"
+    environment:
+      # Set SPRING_PROFILES_ACTIVE to 'h2' or 'mongo' to select the DB profile
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-h2}
+      - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/votingdb
+    depends_on:
+      - mongo
+
+  mongo:
+    image: mongo:6
+    container_name: voting-mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo_data:/data/db
+
+volumes:
+  mongo_data:

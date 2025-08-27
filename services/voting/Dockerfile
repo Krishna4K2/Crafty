@@ -19,4 +19,7 @@ COPY --from=builder /app/target/voting-0.0.1-SNAPSHOT.jar app.jar
 
 EXPOSE 8086
 
+# Allow profile selection via SPRING_PROFILES_ACTIVE env variable
+ENV SPRING_PROFILES_ACTIVE=h2
+
 CMD ["java", "-jar", "app.jar"]

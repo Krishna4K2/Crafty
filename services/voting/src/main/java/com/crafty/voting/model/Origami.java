@@ -1,25 +1,24 @@
 package com.crafty.voting.model;
 
 import jakarta.persistence.Entity;
+import jakarta.persistence.Id;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
-import jakarta.persistence.Id;
-import lombok.Data;
-import com.fasterxml.jackson.annotation.JsonProperty;
 
-@Data
 @Entity
 public class Origami {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long origamiId;
+    private String origamiId;
     private String name;
     private int votes;
 
-    @JsonProperty("id")  // Ensure that this maps the 'id' from JSON to 'origamiId'
-    public void setOrigamiId(Long id) {
-        this.origamiId = id;
-    }
+    public String getOrigamiId() { return origamiId; }
+    public void setOrigamiId(String origamiId) { this.origamiId = origamiId; }
 
-    // No need for any conversion now since the IDs are already in the correct format (Long)
+    public String getName() { return name; }
+    public void setName(String name) { this.name = name; }
+
+    public int getVotes() { return votes; }
+    public void setVotes(int votes) { this.votes = votes; }
 }

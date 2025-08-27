@@ -3,7 +3,7 @@ package com.example.voting.controller;
 import com.crafty.voting.service.OrigamiService;
 import com.crafty.voting.model.Origami;
 import org.springframework.http.ResponseEntity;
-import com.crafty.voting.repository.OrigamiRepository;
+import com.crafty.voting.repository.jpa.OrigamiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -29,13 +29,13 @@ public class VotingController {
     }
 
     @GetMapping("/{origamiId}")
-    public Origami getOrigami(@PathVariable Long origamiId) {
-        return origamiRepository.findById(origamiId)
+    public Origami getOrigami(@PathVariable String origamiId) {
+        return origamiService.getOrigamiById(origamiId)
             .orElseThrow(() -> new RuntimeException("Origami Not Found"));
     }
 
     @GetMapping("/{origamiId}/votes")
-    public ResponseEntity<Integer> getVotes(@PathVariable Long origamiId) {
+    public ResponseEntity<Integer> getVotes(@PathVariable String origamiId) {
         try {
             int votes = origamiService.getVotes(origamiId);
             return ResponseEntity.ok(votes);
@@ -47,14 +47,14 @@ public class VotingController {
 
     @PostMapping
     public Origami addOrigami(@RequestBody Origami origami) {
-        return origamiRepository.save(origami);
+        return origamiService.saveOrUpdateOrigami(origami);
     }
 
     @PostMapping("/{origamiId}/vote")
-    public Origami voteForOrigami(@PathVariable Long origamiId) {
-        Origami origami = origamiRepository.findById(origamiId)
+    public Origami voteForOrigami(@PathVariable String origamiId) {
+        Origami origami = origamiService.getOrigamiById(origamiId)
             .orElseThrow(() -> new RuntimeException("Origami Not Found"));
         origami.setVotes(origami.getVotes() + 1);
-        return origamiRepository.save(origami);
+        return origamiService.saveOrUpdateOrigami(origami);
     }
 }

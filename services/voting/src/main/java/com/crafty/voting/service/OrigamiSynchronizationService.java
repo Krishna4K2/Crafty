@@ -2,7 +2,7 @@ package com.crafty.voting.service;
 
 import com.crafty.voting.config.AppProperties;
 import com.crafty.voting.model.Origami;
-import com.crafty.voting.repository.OrigamiRepository;
+import com.crafty.voting.repository.jpa.OrigamiRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -41,7 +41,7 @@ public class OrigamiSynchronizationService {
         List<Origami> origamis = fetchOrigamisFromCatalogueService();
         for (Origami origami : origamis) {
             if (origami.getOrigamiId() != null) { // Check if ID is not null
-                Optional<Origami> existingOrigami = origamiRepository.findById(origami.getOrigamiId());
+                Optional<Origami> existingOrigami = origamiRepository.findById(convertId(origami.getOrigamiId()));
                 if (!existingOrigami.isPresent()) {
                     origamiRepository.save(origami);
                 } else {
@@ -57,6 +57,14 @@ public class OrigamiSynchronizationService {
     } catch (Exception e) {
         log.error("Error during synchronization of origamis: " + e.getMessage(), e);
     }
+    }
+
+    private Long convertId(String id) {
+        try {
+            return Long.valueOf(id);
+        } catch (Exception e) {
+            return null;
+        }
     }
 
 
