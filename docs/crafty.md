@@ -1,18 +1,19 @@
 ```mermaid
 flowchart TD
     User([End User<br>Web Browser])
-    User -->|HTTP Request| FE[Frontend<br>Node.js/Express.js]
-    FE -->|REST API| CAT[Catalogue Service<br>Python/Flask]
-    FE -->|REST API| VOTE[Voting Service<br>Java/Spring Boot]
-    FE -->|REST API| REC[Recommendation Service<br>Go]
-    CAT -->|Data Store| CATDB[(catalogue-db<br>JSON/MongoDB)]
-    VOTE -->|Data Store| VOTEDB[(voting-db<br>H2/PostgreSQL)]
-    REC --> CAT
-    REC --> VOTE
-    FE --> FEStatusUI[Status Dashboard UI]
-    FE --> FEUnitTestUI[Unit Tests Dashboard UI]
+    User -->|HTTP Request| FE[Frontend<br>Node.js/Express.js<br>Port: 3000]
+    FE -->|REST API| CAT[Catalogue Service<br>Python/Flask<br>Port: 5000]
+    FE -->|REST API| VOTE[Voting Service<br>Java/Spring Boot<br>Port: 8086]
+    FE -->|REST API| REC[Recommendation Service<br>Go<br>Port: 8080]
 
-    %% Optional: Grouping (visual only, not strict in Mermaid)
+    CAT -->|Data Store| CATDB[(catalogue-db<br>JSON/PostgreSQL)]
+    VOTE -->|Data Store| VOTEDB[(voting-db<br>H2 In-Memory)]
+    REC -->|Data Fetch| CAT
+
+    FE -->|Internal Routes| FEStatus[Service Status<br>Dashboard]
+    FE -->|Internal Routes| FEUnitTests[Unit Tests<br>Dashboard]
+
+    %% Grouping
     subgraph Microservices
         CAT
         VOTE
@@ -21,5 +22,9 @@ flowchart TD
     subgraph DataStores
         CATDB
         VOTEDB
+    end
+    subgraph Frontend_Features
+        FEStatus
+        FEUnitTests
     end
 ```
