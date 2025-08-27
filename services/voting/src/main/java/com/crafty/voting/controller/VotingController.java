@@ -3,6 +3,7 @@ package com.crafty.voting.controller;
 import com.crafty.voting.service.OrigamiService;
 import com.crafty.voting.model.Origami;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.HttpStatus;
 import com.crafty.voting.repository.jpa.OrigamiRepository;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +30,14 @@ public class VotingController {
     }
 
     @GetMapping("/{origamiId}")
-    public Origami getOrigami(@PathVariable String origamiId) {
-        return origamiService.getOrigamiById(origamiId)
-            .orElseThrow(() -> new RuntimeException("Origami Not Found"));
+    public ResponseEntity<Origami> getOrigami(@PathVariable String origamiId) {
+        try {
+            return origamiService.getOrigamiById(origamiId)
+                .map(origami -> ResponseEntity.ok(origami))
+                .orElse(ResponseEntity.notFound().build());
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/{origamiId}/votes")
@@ -46,16 +52,31 @@ public class VotingController {
     }
 
     @PostMapping
-    public Origami addOrigami(@RequestBody Origami origami) {
-        return origamiService.saveOrUpdateOrigami(origami);
+    public ResponseEntity<Origami> addOrigami(@RequestBody Origami origami) {
+        try {
+            Origami savedOrigami = origamiService.saveOrUpdateOrigami(origami);
+            return ResponseEntity.ok(savedOrigami);
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @PostMapping("/{origamiId}/vote")
-    public Origami voteForOrigami(@PathVariable String origamiId) {
-        Origami origami = origamiService.getOrigamiById(origamiId)
-            .orElseThrow(() -> new RuntimeException("Origami Not Found"));
-        origami.setVotes(origami.getVotes() + 1);
-        return origamiService.saveOrUpdateOrigami(origami);
+    public ResponseEntity<Origami> voteForOrigami(@PathVariable String origamiId) {
+        try {
+            Origami origami = origamiService.getOrigamiById(origamiId)
+                .orElseThrow(() -> new RuntimeException("Origami Not Found"));
+            origami.setVotes(origami.getVotes() + 1);
+            Origami updatedOrigami = origamiService.saveOrUpdateOrigami(origami);
+            return ResponseEntity.ok(updatedOrigami);
+        } catch (RuntimeException e) {
+            if (e.getMessage().contains("Origami Not Found")) {
+                return ResponseEntity.notFound().build();
+            }
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build();
+        }
     }
 
     @GetMapping("/status")
