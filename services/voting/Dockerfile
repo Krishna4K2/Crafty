@@ -6,6 +6,7 @@ WORKDIR /app
 # Copy Maven wrapper and source code
 COPY . .
 
+RUN chmod +x mvnw
 # Build the application (skip tests for speed)
 RUN ./mvnw clean package -DskipTests
 
