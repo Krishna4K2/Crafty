@@ -6,7 +6,9 @@ import json
 import psycopg2
 from dotenv import load_dotenv
 
-app = Flask(__name__)
+app = Flask(__name__,
+            static_folder='static',
+            static_url_path='/static')
 
 # Load environment variables from .env file
 load_dotenv()
