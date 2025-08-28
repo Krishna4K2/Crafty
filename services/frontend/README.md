@@ -31,16 +31,18 @@ npm --version
 ### 3. Environment Variables
 Create a `.env` file or set environment variables:
 
-```sh
-# Service URLs
-export CATALOGUE_BASE_URI=http://localhost:5000
-export VOTING_BASE_URI=http://localhost:8086
-export RECOMMENDATION_BASE_URI=http://localhost:8080
+```bash
+# Service URLs (for Docker)
+PRODUCTS_API_BASE_URI=http://catalogue:5000
+RECOMMENDATION_BASE_URI=http://recommendation:8080
+VOTING_BASE_URI=http://voting:8086
 
 # Server Configuration
-export PORT=3000
-export NODE_ENV=development
+PORT=3000
+NODE_ENV=production
 ```
+
+**Note:** A `.env` file is already created with the correct Docker service URLs.
 
 ## How to Build Frontend App
 
@@ -237,9 +239,15 @@ The `docker-compose.yml` file includes:
 
 #### Environment Variables
 ```bash
-PRODUCTS_API_BASE_URI=http://localhost:5000     # Catalogue service URL
-RECOMMENDATION_BASE_URI=http://localhost:8080   # Recommendation service URL
-VOTING_BASE_URI=http://localhost:8086           # Voting service URL
+# Service URLs (for Docker - RECOMMENDED)
+PRODUCTS_API_BASE_URI=http://catalogue:5000     # Catalogue service URL
+RECOMMENDATION_BASE_URI=http://recommendation:8080   # Recommendation service URL
+VOTING_BASE_URI=http://voting:8086           # Voting service URL
+
+# Alternative: Local development URLs
+# PRODUCTS_API_BASE_URI=http://localhost:5000
+# RECOMMENDATION_BASE_URI=http://localhost:8080
+# VOTING_BASE_URI=http://localhost:8086
 NODE_ENV=production                             # Environment mode
 PORT=3000                                       # Service port
 ```
@@ -269,9 +277,9 @@ docker build -t crafty-frontend .
 docker run -d \
   --name crafty-frontend \
   -p 3000:3000 \
-  -e PRODUCTS_API_BASE_URI=http://localhost:5000 \
-  -e VOTING_BASE_URI=http://localhost:8086 \
-  -e RECOMMENDATION_BASE_URI=http://localhost:8080 \
+  -e PRODUCTS_API_BASE_URI=http://host.docker.internal:5000 \
+  -e RECOMMENDATION_BASE_URI=http://host.docker.internal:8080 \
+  -e VOTING_BASE_URI=http://host.docker.internal:8086 \
   crafty-frontend
 ```
 
@@ -508,9 +516,9 @@ The service uses a configuration file (`config.json`) for service URLs:
 ```
 
 ### Environment Variables
-- `CATALOGUE_BASE_URI`: Base URL for catalogue service (default: http://localhost:5000)
-- `VOTING_BASE_URI`: Base URL for voting service (default: http://localhost:8086)
-- `RECOMMENDATION_BASE_URI`: Base URL for recommendation service (default: http://localhost:8080)
+- `PRODUCTS_API_BASE_URI`: Base URL for catalogue service (default: http://catalogue:5000)
+- `VOTING_BASE_URI`: Base URL for voting service (default: http://voting:8086)
+- `RECOMMENDATION_BASE_URI`: Base URL for recommendation service (default: http://recommendation:8080)
 - `PORT`: Server port (default: 3000)
 - `NODE_ENV`: Environment mode (development/production)
 

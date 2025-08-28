@@ -7,9 +7,9 @@ services:
     ports:
       - "3000:3000"
     environment:
-      - PRODUCTS_API_BASE_URI=http://localhost:5000
-      - RECOMMENDATION_BASE_URI=http://localhost:8080
-      - VOTING_BASE_URI=http://localhost:8086
+      - PRODUCTS_API_BASE_URI=http://catalogue:5000
+      - RECOMMENDATION_BASE_URI=http://recommendation:8080
+      - VOTING_BASE_URI=http://voting:8086
       - NODE_ENV=production
     networks:
       - frontend-network
@@ -18,27 +18,34 @@ services:
       - recommendation
       - voting
     restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 30s
 
   # Optional: Include all services for standalone testing
   catalogue:
-    image: crafty-catalogue:latest
+    build: ../catalogue
     container_name: crafty-catalogue-standalone
     ports:
       - "5000:5000"
     environment:
       - DATA_SOURCE=json
+      - APP_VERSION=1.0.0
     networks:
       - frontend-network
     profiles:
       - full-stack
 
   recommendation:
-    image: crafty-recommendation:latest
+    build: ../recommendation
     container_name: crafty-recommendation-standalone
     ports:
       - "8080:8080"
     environment:
-      - CATALOGUE_SERVICE_URL=http://catalogue:5000
+      - CATALOGUE_API_URL=http://catalogue:5000/api/products
     networks:
       - frontend-network
     depends_on:
@@ -47,12 +54,30 @@ services:
       - full-stack
 
   voting:
-    image: crafty-voting:latest
+    build: ../voting
     container_name: crafty-voting-standalone
     ports:
       - "8086:8086"
     environment:
-      - SPRING_PROFILES_ACTIVE=default
+      - SPRING_PROFILES_ACTIVE=mongodb
+      - CATALOGUE_SERVICE_URL=http://catalogue:5000/api/products
+      - MONGODB_URI=mongodb://mongo:27017/votingdb
+    networks:
+      - frontend-network
+    depends_on:
+      - mongo
+    profiles:
+      - full-stack
+
+  mongo:
+    image: mongo:6
+    container_name: crafty-voting-db-standalone
+    ports:
+      - "27017:27017"
+    environment:
+      - MONGO_INITDB_DATABASE=votingdb
+    volumes:
+      - mongo_data:/data/db
     networks:
       - frontend-network
     profiles:

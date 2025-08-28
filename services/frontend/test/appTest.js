@@ -23,7 +23,7 @@ describe('App', () => {
         });
     });
 
-    describe('GET /products', () => {
+    describe('GET /api/products', () => {
         it('should get array of products', (done) => {
             
             // Mocking API Response
@@ -37,7 +37,7 @@ describe('App', () => {
                    image_url: 'http://example.com/sample.jpg'
                 }]);
 
-            chai.request(productsApiBaseUri)
+            chai.request(server)
                 .get('/api/products')
                 .end((err, res) => {
                     expect(res).to.have.status(200);
