@@ -26,11 +26,11 @@ USER appuser
 
 EXPOSE 8086
 
-# Add health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
-  CMD curl -f http://localhost:8086/actuator/health || exit 1
+# Remove the hardcoded healthcheck since docker-compose handles it
+# HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+#   CMD curl -f http://localhost:8086/actuator/health || exit 1
 
-# Always use H2 profile for standalone Docker runs
-ENV SPRING_PROFILES_ACTIVE=h2
+# Remove hardcoded profile - let docker-compose control it
+# ENV SPRING_PROFILES_ACTIVE=h2
 
 CMD ["java", "-jar", "app.jar"]
