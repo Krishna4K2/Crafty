@@ -1,11 +1,15 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
+	"log"
 	"net"
 	"net/http"
 	"os"
+	"os/signal"
 	"recommendation/api"
+	"syscall"
 	"time"
 
 	"github.com/gin-gonic/gin"
@@ -97,6 +101,9 @@ func renderHomePage(c *gin.Context) {
 }
 
 func main() {
+	// Alternative: You can also use api.StartAPI() instead of the code below
+	// api.StartAPI() // Uncomment this line and comment out the rest to use the alternative startup
+
 	router := gin.Default()
 
 	// Load HTML files
@@ -114,7 +121,39 @@ func main() {
 	// Service Status Page
 	router.GET("/api/recommendation-status", getRecommendationStatus)
 
-	// Start the server on port 8080
-	router.Run(":8080")
+	// Get port from environment variable or default to 8080
+	port := os.Getenv("PORT")
+	if port == "" {
+		port = "8080"
+	}
 
+	// Start the server with graceful shutdown
+	srv := &http.Server{
+		Addr:    ":" + port,
+		Handler: router,
+	}
+
+	// Channel to listen for interrupt signal
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, syscall.SIGINT, syscall.SIGTERM)
+
+	go func() {
+		log.Printf("Starting server on port %s", port)
+		if err := srv.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			log.Fatalf("Server failed to start: %v", err)
+		}
+	}()
+
+	<-quit
+	log.Println("Shutting down server...")
+
+	// Graceful shutdown with timeout
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
+	defer cancel()
+
+	if err := srv.Shutdown(ctx); err != nil {
+		log.Fatalf("Server forced to shutdown: %v", err)
+	}
+
+	log.Println("Server exited")
 }

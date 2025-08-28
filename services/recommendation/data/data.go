@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
 
 type Origami struct {
@@ -25,17 +26,58 @@ func GetDailyOrigami() []Origami {
 		catalogueURL = "http://localhost:5000/api/products" // default fallback
 	}
 
-	resp, err := http.Get(catalogueURL)
+	// Create HTTP client with timeout
+	client := &http.Client{
+		Timeout: 10 * time.Second,
+	}
+
+	log.Printf("Fetching data from catalogue service: %s", catalogueURL)
+
+	resp, err := client.Get(catalogueURL)
 	if err != nil {
 		log.Printf("Error fetching catalogue data: %v", err)
 		return []Origami{}
 	}
 	defer resp.Body.Close()
 
+	// Check response status
+	if resp.StatusCode != http.StatusOK {
+		log.Printf("Catalogue service returned status: %d", resp.StatusCode)
+		return []Origami{}
+	}
+
+	// Check content type
+	contentType := resp.Header.Get("Content-Type")
+	if contentType != "" && !contains(contentType, "application/json") {
+		log.Printf("Unexpected content type from catalogue service: %s", contentType)
+		return []Origami{}
+	}
+
 	var products []Origami
 	if err := json.NewDecoder(resp.Body).Decode(&products); err != nil {
 		log.Printf("Error decoding catalogue response: %v", err)
 		return []Origami{}
 	}
+
+	if len(products) == 0 {
+		log.Printf("No products received from catalogue service")
+		return []Origami{}
+	}
+
+	log.Printf("Successfully fetched %d products from catalogue service", len(products))
 	return products
+}
+
+// Helper function to check if string contains substring
+func contains(s, substr string) bool {
+	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsSubstring(s, substr)))
+}
+
+func containsSubstring(s, substr string) bool {
+	for i := 0; i <= len(s)-len(substr); i++ {
+		if s[i:i+len(substr)] == substr {
+			return true
+		}
+	}
+	return false
 }
