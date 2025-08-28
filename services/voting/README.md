@@ -1,13 +1,20 @@
 # Crafty Voting Service - Complete Setup Guide
 
 ## Overview
-The Voting Service is a Java Spring Boot microservice that manages origami voting functionality. It synchronizes origami data from the Catalogue Service and provides voting capabilities with a choice between H2 (in-memory) and MongoDB databases.
+The Voting Service is a Java Spring Boot microservice that manages
+### Docker Compose (always MongoDB)
+Use Docker Compose to run both the voting service and MongoDB:
+```sh
+docker-compose up -d
+```
+> The voting service will always use MongoDB in Docker Compose. Environment variables are configured in the `.env` file.mi voting functionality. It synchronizes origami data from the Catalogue Service and provides voting capabilities with a choice between H2 (in-memory) and MongoDB databases.
 
 ## Prerequisites
 - **Java JDK 21** installed and `JAVA_HOME` set
 - **Maven 3.9.11** or use the included Maven Wrapper (`mvnw`/`mvnw.cmd`)
 - **Docker & Docker Compose** (for containerized deployment)
 - **Git** (for cloning the repository)
+- **curl** (for health checks and testing)
 
 ## Local Environment Setup
 
@@ -112,6 +119,8 @@ To run the voting service locally using the default H2 in-memory database:
 - **POST** `/api/origamis` - Add new origami
 - **GET** `/api/origamis/status` - Service status
 - **GET** `/h2-console` - H2 database console (when using H2)
+- **GET** `/actuator/health` - Health check endpoint
+- **GET** `/actuator/info` - Application information
 
 ## Docker Setup
 
@@ -225,7 +234,7 @@ docker network ls
 ### Quick Start
 ```bash
 # From services/voting directory
-# Docker Compose automatically reads ../.env
+# Docker Compose automatically reads the .env file (already created)
 docker-compose up -d
 
 # View logs
@@ -252,16 +261,27 @@ docker-compose down
 The `docker-compose.yml` file includes:
 - **Voting Service**: Java Spring Boot application on port 8086
 - **MongoDB Database**: Persistent storage on port 27017
+- **Catalogue Service**: Flask application on port 5000
 - **Health Checks**: Automatic service monitoring
 - **Networking**: Isolated container network
 
-#### Environment Variables
+#### Environment Configuration
+A `.env` file is already created with default settings:
+
 ```bash
-SPRING_PROFILES_ACTIVE=default    # default or mongodb
-CATALOGUE_SERVICE_URL=http://localhost:5000/api/products
-SERVER_PORT=8086
+# Voting Service Environment Variables
+SPRING_PROFILES_ACTIVE=mongodb
+CATALOGUE_SERVICE_URL=http://catalogue:5000/api/products
 MONGODB_URI=mongodb://mongo:27017/votingdb
+MONGODB_DATABASE=votingdb
+SERVER_PORT=8086
+
+# Spring Boot Actuator
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
 ```
+
+**You don't need to create or modify the .env file** - it's ready to use!
 
 #### Service Health Checks
 ```bash
@@ -314,6 +334,26 @@ docker run -d \
 ```
 
 ### Troubleshooting Docker Compose
+
+#### Actuator Health Check Issues
+```bash
+# If health check fails, verify actuator is enabled
+docker-compose exec voting env | grep MANAGEMENT
+
+# Check actuator endpoint directly
+curl http://localhost:8086/actuator/health
+```
+
+#### Environment Variable Conflicts
+```bash
+# Clear environment variables that might conflict
+unset SPRING_DATA_MONGODB_URI
+unset CATALOGUE_SERVICE_URL
+
+# Use docker-compose environment instead
+# The .env file is already configured with correct values
+docker-compose up -d
+```
 
 #### Database Connection Issues
 ```bash
@@ -418,6 +458,10 @@ spring.h2.console.enabled=true
 # MongoDB (when using mongodb profile)
 spring.data.mongodb.uri=mongodb://localhost:27017/voting
 spring.data.mongodb.database=voting
+
+# Spring Boot Actuator
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
 ```
 
 ### Profiles

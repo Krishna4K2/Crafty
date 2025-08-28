@@ -1,4 +1,5 @@
-version: "3.8"
+# Docker Compose version 3.8 - supports all features used in this file
+# This version is optional in newer Docker Compose but included for clarity
 
 services:
   voting:
@@ -7,14 +8,20 @@ services:
     ports:
       - "8086:8086"
     environment:
-      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-mongodb}
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/votingdb
-      - CATALOGUE_SERVICE_URL=http://localhost:5000/api/products
+      - CATALOGUE_SERVICE_URL=${CATALOGUE_SERVICE_URL:-http://catalogue:5000/api/products}
       - SERVER_PORT=8086
+      # Enable Spring Boot Actuator
+      - MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+      - MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
     networks:
       - voting-network
     depends_on:
-      - mongo
+      mongo:
+        condition: service_healthy
+      catalogue:
+        condition: service_healthy
     restart: unless-stopped
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
@@ -37,6 +44,22 @@ services:
       - voting-network
     healthcheck:
       test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  catalogue:
+    build: ../catalogue
+    container_name: crafty-catalogue
+    ports:
+      - "5000:5000"
+    environment:
+      - DATA_SOURCE=json
+      - APP_VERSION=1.0.0
+    networks:
+      - voting-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/products"]
       interval: 30s
       timeout: 10s
       retries: 3
