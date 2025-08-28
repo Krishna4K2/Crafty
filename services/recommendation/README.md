@@ -595,23 +595,6 @@ curl http://localhost:8080/api/origami-of-the-day
 curl http://localhost:8080/
 ```
 
-## Recent Improvements
-
-### ✅ Version 1.0.1 Updates
-- **Enhanced Error Handling**: Added timeout protection and content validation
-- **Improved Logging**: Structured logging for better debugging
-- **Alternative Startup**: Added `StartAPI()` function for flexible deployment
-- **Graceful Shutdown**: Added signal handling for clean service shutdown
-- **Better Testing**: Enhanced test coverage with multiple scenarios
-- **Documentation**: Updated README with new features and examples
-
-### 🔧 Configuration Files
-- `.env.example` - Environment variable template
-- `.dockerignore` - Optimized Docker build context
-- `.gitignore` - Comprehensive Git ignore rules
-
-The service is now production-ready with proper error handling, logging, and testing capabilities!
-
 ## Deployment
 
 ### Production Considerations
@@ -636,7 +619,7 @@ docker run -d \
 ```
 
 ## Notes
-- The service requires Go 1.20+ for optimal performance
+- The service requires Go 1.25+ for optimal performance
 - Ensure the catalogue service is running before starting this service
 - The service fetches data from the catalogue service on each request
 - For high-traffic scenarios, consider implementing caching

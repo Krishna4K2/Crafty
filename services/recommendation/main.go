@@ -4,7 +4,6 @@ import (
 	"context"
 	"encoding/json"
 	"log"
-	"net"
 	"net/http"
 	"os"
 	"os/signal"
@@ -34,39 +33,6 @@ func loadConfig() (Config, error) {
 	return config, err
 }
 
-type SystemInfo struct {
-	Hostname     string
-	IPAddress    string
-	IsContainer  bool
-	IsKubernetes bool
-}
-
-func GetSystemInfo() SystemInfo {
-	hostname, _ := os.Hostname()
-	addrs, _ := net.InterfaceAddrs()
-	ip := ""
-	for _, addr := range addrs {
-		if ipnet, ok := addr.(*net.IPNet); ok && !ipnet.IP.IsLoopback() {
-			if ipnet.IP.To4() != nil {
-				ip = ipnet.IP.String()
-				break
-			}
-		}
-	}
-	isContainer := false
-	if _, err := os.Stat("/.dockerenv"); err == nil {
-		isContainer = true
-	}
-	isKubernetes := false
-
-	return SystemInfo{
-		Hostname:     hostname,
-		IPAddress:    ip,
-		IsContainer:  isContainer,
-		IsKubernetes: isKubernetes,
-	}
-}
-
 func getRecommendationStatus(c *gin.Context) {
 	// Here you would typically check some aspects of your service to determine its status.
 	// If everything's ok, return operational. Otherwise, return a different status.
@@ -87,11 +53,12 @@ func getRecommendationStatus(c *gin.Context) {
 func renderHomePage(c *gin.Context) {
 	config, err := loadConfig()
 	if err != nil {
+		log.Printf("Error loading config: %v", err)
 		c.String(http.StatusInternalServerError, "Internal Server Error")
 		return
 	}
 
-	systemInfo := GetSystemInfo()
+	systemInfo := api.GetSystemInfo()
 
 	c.HTML(http.StatusOK, "index.html", gin.H{
 		"Year":       time.Now().Year(),

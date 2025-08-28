@@ -5,6 +5,7 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 )
 
@@ -48,7 +49,7 @@ func GetDailyOrigami() []Origami {
 
 	// Check content type
 	contentType := resp.Header.Get("Content-Type")
-	if contentType != "" && !contains(contentType, "application/json") {
+	if contentType != "" && !strings.Contains(contentType, "application/json") {
 		log.Printf("Unexpected content type from catalogue service: %s", contentType)
 		return []Origami{}
 	}
@@ -66,18 +67,4 @@ func GetDailyOrigami() []Origami {
 
 	log.Printf("Successfully fetched %d products from catalogue service", len(products))
 	return products
-}
-
-// Helper function to check if string contains substring
-func contains(s, substr string) bool {
-	return len(s) >= len(substr) && (s == substr || len(s) > len(substr) && (s[:len(substr)] == substr || s[len(s)-len(substr):] == substr || containsSubstring(s, substr)))
-}
-
-func containsSubstring(s, substr string) bool {
-	for i := 0; i <= len(s)-len(substr); i++ {
-		if s[i:i+len(substr)] == substr {
-			return true
-		}
-	}
-	return false
 }

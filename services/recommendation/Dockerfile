@@ -25,6 +25,9 @@ COPY static ./static
 COPY templates ./templates
 COPY config.json .
 
+# Copy entrypoint script
+COPY entrypoint.sh .
+
 # Make entrypoint executable
 RUN chmod +x entrypoint.sh
 
