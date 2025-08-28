@@ -6,7 +6,6 @@ import org.springframework.stereotype.Service;
 import com.crafty.voting.model.Origami;
 import com.crafty.voting.repository.jpa.OrigamiRepository;
 import com.crafty.voting.repository.mongo.OrigamiMongoRepository;
-import org.springframework.core.env.Environment;
 
 import java.util.Optional;
 

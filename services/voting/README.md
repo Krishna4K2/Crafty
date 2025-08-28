@@ -1,13 +1,20 @@
 # Crafty Voting Service - Complete Setup Guide
 
 ## Overview
-The Voting Service is a Java Spring Boot microservice that manages origami voting functionality. It synchronizes origami data from the Catalogue Service and provides voting capabilities with a choice between H2 (in-memory) and MongoDB databases.
+The Voting Service is a Java Spring Boot microservice that manages
+### Docker Compose (always MongoDB)
+Use Docker Compose to run both the voting service and MongoDB:
+```sh
+docker-compose up -d
+```
+> The voting service will always use MongoDB in Docker Compose. Environment variables are configured in the `.env` file.mi voting functionality. It synchronizes origami data from the Catalogue Service and provides voting capabilities with a choice between H2 (in-memory) and MongoDB databases.
 
 ## Prerequisites
 - **Java JDK 21** installed and `JAVA_HOME` set
 - **Maven 3.9.11** or use the included Maven Wrapper (`mvnw`/`mvnw.cmd`)
 - **Docker & Docker Compose** (for containerized deployment)
 - **Git** (for cloning the repository)
+- **curl** (for health checks and testing)
 
 ## Local Environment Setup
 
@@ -112,6 +119,8 @@ To run the voting service locally using the default H2 in-memory database:
 - **POST** `/api/origamis` - Add new origami
 - **GET** `/api/origamis/status` - Service status
 - **GET** `/h2-console` - H2 database console (when using H2)
+- **GET** `/actuator/health` - Health check endpoint
+- **GET** `/actuator/info` - Application information
 
 ## Docker Setup
 
@@ -220,6 +229,169 @@ docker network inspect crafty-network
 docker network ls
 ```
 
+## Docker Compose Setup (Recommended)
+
+### Quick Start
+```bash
+# From services/voting directory
+# Docker Compose automatically reads the .env file (already created)
+docker-compose up -d
+
+# View logs
+docker-compose logs -f voting
+
+# Check service health
+docker-compose ps
+```
+
+### Run with MongoDB Database
+```bash
+# The docker-compose.yml is configured to use MongoDB by default
+# If you want to use H2 instead, modify SPRING_PROFILES_ACTIVE
+SPRING_PROFILES_ACTIVE=default docker-compose up -d
+```
+
+### Stop Services
+```bash
+docker-compose down
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file includes:
+- **Voting Service**: Java Spring Boot application on port 8086
+- **MongoDB Database**: Persistent storage on port 27017
+- **Catalogue Service**: Flask application on port 5000
+- **Health Checks**: Automatic service monitoring
+- **Networking**: Isolated container network
+
+#### Environment Configuration
+A `.env` file is already created with default settings:
+
+```bash
+# Voting Service Environment Variables
+SPRING_PROFILES_ACTIVE=mongodb
+CATALOGUE_SERVICE_URL=http://catalogue:5000/api/products
+MONGODB_URI=mongodb://mongo:27017/votingdb
+MONGODB_DATABASE=votingdb
+SERVER_PORT=8086
+
+# Spring Boot Actuator
+MANAGEMENT_ENDPOINTS_WEB_EXPOSURE_INCLUDE=health,info
+MANAGEMENT_ENDPOINT_HEALTH_SHOW_DETAILS=always
+```
+
+**You don't need to create or modify the .env file** - it's ready to use!
+
+#### Service Health Checks
+```bash
+# Check service status
+docker-compose ps
+
+# View health logs
+docker-compose logs voting
+
+# Manual health check
+curl http://localhost:8086/actuator/health
+```
+
+### Individual Docker Container Setup
+
+#### 1. Build Docker Image
+```bash
+# From services/voting directory
+docker build -t crafty-voting .
+```
+
+#### 2. Run with H2 Database (Standalone)
+```bash
+docker run -d \
+  --name crafty-voting \
+  -p 8086:8086 \
+  -e SPRING_PROFILES_ACTIVE=default \
+  -e CATALOGUE_SERVICE_URL=http://localhost:5000/api/products \
+  crafty-voting
+```
+
+#### 3. Run with MongoDB (Standalone)
+```bash
+# Start MongoDB first
+docker run -d \
+  --name crafty-voting-db \
+  -p 27017:27017 \
+  -e MONGO_INITDB_DATABASE=votingdb \
+  mongo:6
+
+# Start voting service
+docker run -d \
+  --name crafty-voting \
+  -p 8086:8086 \
+  --link crafty-voting-db:mongo \
+  -e SPRING_PROFILES_ACTIVE=mongodb \
+  -e MONGODB_URI=mongodb://mongo:27017/votingdb \
+  -e CATALOGUE_SERVICE_URL=http://localhost:5000/api/products \
+  crafty-voting
+```
+
+### Troubleshooting Docker Compose
+
+#### Actuator Health Check Issues
+```bash
+# If health check fails, verify actuator is enabled
+docker-compose exec voting env | grep MANAGEMENT
+
+# Check actuator endpoint directly
+curl http://localhost:8086/actuator/health
+```
+
+#### Environment Variable Conflicts
+```bash
+# Clear environment variables that might conflict
+unset SPRING_DATA_MONGODB_URI
+unset CATALOGUE_SERVICE_URL
+
+# Use docker-compose environment instead
+# The .env file is already configured with correct values
+docker-compose up -d
+```
+
+#### Database Connection Issues
+```bash
+# Check MongoDB logs
+docker-compose logs mongo
+
+# Verify MongoDB is ready
+docker-compose exec mongo mongosh --eval "db.adminCommand('ping')"
+
+# Restart database
+docker-compose restart mongo
+```
+
+#### Service Won't Start
+```bash
+# Check service logs
+docker-compose logs voting
+
+# Verify environment variables
+docker-compose exec voting env
+
+# Check container health
+docker-compose ps
+```
+
+#### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
 ### Docker Compose for Multi-Service Setup
 
 #### Using Docker Compose (Recommended)
@@ -286,6 +458,10 @@ spring.h2.console.enabled=true
 # MongoDB (when using mongodb profile)
 spring.data.mongodb.uri=mongodb://localhost:27017/voting
 spring.data.mongodb.database=voting
+
+# Spring Boot Actuator
+management.endpoints.web.exposure.include=health,info
+management.endpoint.health.show-details=always
 ```
 
 ### Profiles

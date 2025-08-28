@@ -6,10 +6,10 @@ from dotenv import load_dotenv
 # Load environment variables from .env
 load_dotenv()
 
-DB_HOST = os.getenv("DB_HOST", "localhost")
+DB_HOST = os.getenv("DB_HOST", "catalogue-db")
 DB_NAME = os.getenv("DB_NAME", "catalogue")
-DB_USER = os.getenv("DB_USER", "devops")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "devops")
+DB_USER = os.getenv("DB_USER", "crafty")
+DB_PASSWORD = os.getenv("DB_PASSWORD", "crafty")
 
 conn = psycopg2.connect(
         host=DB_HOST,

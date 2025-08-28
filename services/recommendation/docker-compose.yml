@@ -1,0 +1,77 @@
+services:
+  recommendation:
+    build: .
+    container_name: crafty-recommendation
+    ports:
+      - "${PORT:-8080}:8080"
+    environment:
+      - CATALOGUE_API_URL=${CATALOGUE_API_URL:-http://catalogue:5000/api/products}
+      - PORT=${PORT:-8080}
+      - GIN_MODE=${GIN_MODE:-debug}
+    networks:
+      - recommendation-network
+    depends_on:
+      catalogue:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/api/recommendation-status"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  # Optional: Include catalogue service for standalone testing
+  catalogue:
+    build: ../catalogue
+    container_name: crafty-catalogue-standalone
+    ports:
+      - "${CATALOGUE_PORT:-5000}:5000"
+    environment:
+      - DB_HOST=${DB_HOST:-catalogue-db}
+      - DB_NAME=${DB_NAME:-catalogue}
+      - DB_USER=${DB_USER:-crafty}
+      - DB_PASSWORD=${DB_PASSWORD:-crafty}
+      - DATA_SOURCE=${DATA_SOURCE:-json}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
+      - CATALOGUE_PORT=${CATALOGUE_PORT:-5000}
+      - POSTGRES_PORT=${POSTGRES_PORT:-5432}
+    networks:
+      - recommendation-network
+    profiles:
+      - with-catalogue
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/products"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ../catalogue/products.json:/usr/src/app/products.json:ro
+
+  catalogue-db:
+    image: postgres:15
+    container_name: crafty-catalogue-db-standalone
+    restart: always
+    environment:
+      - POSTGRES_DB=${DB_NAME:-catalogue}
+      - POSTGRES_USER=${DB_USER:-crafty}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-crafty}
+    ports:
+      - "${POSTGRES_PORT:-5432}:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    networks:
+      - recommendation-network
+    profiles:
+      - with-catalogue
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-crafty} -d ${DB_NAME:-catalogue}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+volumes:
+  postgres_data:
+
+networks:
+  recommendation-network:
+    driver: bridge

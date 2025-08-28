@@ -1,32 +1,53 @@
-version: "3.8"
-
 services:
-  catalogue-app:
+  catalogue:
     build: .
-    container_name: catalogue-app
+    container_name: crafty-catalogue
     ports:
-      - "5000:5000"
+      - "${CATALOGUE_PORT:-5000}:5000"
     environment:
-      - DB_HOST=${DB_HOST}
-      - DB_NAME=${DB_NAME}
-      - DB_USER=${DB_USER}
-      - DB_PASSWORD=${DB_PASSWORD}
-      - DATA_SOURCE=${DATA_SOURCE}
+      - DB_HOST=${DB_HOST:-catalogue-db}
+      - DB_NAME=${DB_NAME:-catalogue}
+      - DB_USER=${DB_USER:-crafty}
+      - DB_PASSWORD=${DB_PASSWORD:-crafty}
+      - DATA_SOURCE=${DATA_SOURCE:-json}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
+    networks:
+      - catalogue-network
     depends_on:
-      - postgres
+      catalogue-db:
+        condition: service_healthy
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5000/api/products"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    volumes:
+      - ./products.json:/usr/src/app/products.json:ro
 
-  postgres:
+  catalogue-db:
     image: postgres:15
-    container_name: crafty-postgres
+    container_name: crafty-catalogue-db
     restart: always
     environment:
-      - POSTGRES_DB=${DB_NAME}
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
+      - POSTGRES_DB=${DB_NAME:-catalogue}
+      - POSTGRES_USER=${DB_USER:-crafty}
+      - POSTGRES_PASSWORD=${DB_PASSWORD:-crafty}
     ports:
-      - "5432:5432"
+      - "${POSTGRES_PORT:-5432}:5432"
     volumes:
       - postgres_data:/var/lib/postgresql/data
+    networks:
+      - catalogue-network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${DB_USER:-crafty} -d ${DB_NAME:-catalogue}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   postgres_data:
+
+networks:
+  catalogue-network:
+    driver: bridge

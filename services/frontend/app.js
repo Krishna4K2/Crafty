@@ -16,8 +16,6 @@ app.use('/api/origamis', origamisRouter);
 // Static Middleware
 app.use('/static', express.static('public'));
 
-
-
 // Endpoint to serve product data to client
 app.get('/api/products', async (req, res) => {
   try {
@@ -124,5 +122,5 @@ const server = app.listen(PORT, () => {
     console.log(`Server is running on port ${PORT}`);
 });
 
-module.exports = server; // Note that we're exporting the server, not app.
+module.exports = server; // Export server for testing
 

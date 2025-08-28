@@ -1,4 +1,3 @@
-
 # Crafty Catalogue Service - Complete Setup Guide
 
 ## Overview
@@ -11,20 +10,179 @@ The Catalogue Service is a Python Flask microservice that manages the origami pr
 - **Docker & Docker Compose** (for containerized deployment)
 - **Git** (for cloning the repository)
 
-## Local Environment Setup
+## Quick Start with Docker Compose (Recommended)
 
-### 1. Clone and Navigate
-```sh
-git clone <repository-url>
-cd Crafty/services/catalogue
+### 1. Environment Setup
+```bash
+# Navigate to catalogue service directory
+cd services/catalogue
+
+# Copy environment template
+cp .env.example .env
+
+# Edit .env file with your preferred settings
+# See Environment Configuration section below
 ```
 
-### 2. Python Environment Setup
-```sh
-# Verify Python installation
-python --version
-# Should show: Python 3.8.x or higher
+### 2. Choose Your Data Source
 
+#### Option A: Run with JSON File (Default)
+```bash
+# JSON mode is the default - no additional configuration needed
+docker-compose up -d
+
+# Access the service
+curl http://localhost:5000/api/products
+```
+
+#### Option B: Run with PostgreSQL Database
+```bash
+# Edit .env file and set DATA_SOURCE=db
+# DATA_SOURCE=db
+
+# Start services with database
+docker-compose up -d
+
+# The database will be automatically initialized with data from products.json
+```
+
+### 3. Verify Service is Running
+```bash
+# Check service status
+docker-compose ps
+
+# View logs
+docker-compose logs -f catalogue
+
+# Test API endpoint
+curl http://localhost:5000/api/products
+```
+
+## Environment Configuration
+
+### .env File Setup
+The service uses environment variables for configuration. Docker Compose automatically loads `.env` files from the current directory.
+
+```bash
+# Copy the example file
+cp .env.example .env
+```
+
+### Configuration Options
+
+| Variable | Description | Default | Required |
+|----------|-------------|---------|----------|
+| `DATA_SOURCE` | Data storage type: `json` or `db` | `json` | Yes |
+| `DB_HOST` | PostgreSQL hostname | `catalogue-db` | Only for DB mode |
+| `DB_NAME` | PostgreSQL database name | `catalogue` | Only for DB mode |
+| `DB_USER` | PostgreSQL username | `crafty` | Only for DB mode |
+| `DB_PASSWORD` | PostgreSQL password | `crafty` | Only for DB mode |
+| `CATALOGUE_PORT` | Service port | `5000` | No |
+| `POSTGRES_PORT` | Database port | `5432` | No |
+| `APP_VERSION` | Application version | `1.0.0` | No |
+
+### Example .env Configurations
+
+#### For JSON Mode (File-based storage)
+```bash
+APP_VERSION=1.0.0
+DATA_SOURCE=json
+CATALOGUE_PORT=5000
+```
+
+#### For PostgreSQL Mode (Database storage)
+```bash
+APP_VERSION=1.0.0
+DATA_SOURCE=db
+DB_HOST=catalogue-db
+DB_NAME=catalogue
+DB_USER=crafty
+DB_PASSWORD=crafty
+CATALOGUE_PORT=5000
+POSTGRES_PORT=5432
+```
+
+## Running the Service
+
+### Method 1: Docker Compose (Recommended)
+
+#### Start Services
+```bash
+# Start in detached mode
+docker-compose up -d
+
+# Start with specific environment file
+docker-compose --env-file .env up -d
+
+# Start and follow logs
+docker-compose up
+```
+
+#### Stop Services
+```bash
+# Stop services
+docker-compose down
+
+# Stop and remove volumes (WARNING: deletes database data)
+docker-compose down -v
+```
+
+#### View Logs and Status
+```bash
+# View all logs
+docker-compose logs
+
+# Follow logs for specific service
+docker-compose logs -f catalogue
+
+# Check service status
+docker-compose ps
+```
+
+### Method 2: Individual Docker Containers
+
+#### Build the Image
+```bash
+docker build -t crafty-catalogue .
+```
+
+#### Run with JSON Mode
+```bash
+docker run -d \
+  --name catalogue-service \
+  -p 5000:5000 \
+  -e DATA_SOURCE=json \
+  crafty-catalogue
+```
+
+#### Run with PostgreSQL Mode
+```bash
+# Start PostgreSQL first
+docker run -d \
+  --name postgres-db \
+  -p 5432:5432 \
+  -e POSTGRES_DB=catalogue \
+  -e POSTGRES_USER=crafty \
+  -e POSTGRES_PASSWORD=crafty \
+  postgres:15
+
+# Start catalogue service
+docker run -d \
+  --name catalogue-service \
+  -p 5000:5000 \
+  --link postgres-db:postgres \
+  -e DATA_SOURCE=db \
+  -e DB_HOST=postgres \
+  -e DB_NAME=catalogue \
+  -e DB_USER=crafty \
+  -e DB_PASSWORD=crafty \
+  crafty-catalogue
+```
+
+### Method 3: Local Development
+
+#### Python Environment Setup
+```bash
 # Create virtual environment
 python -m venv venv
 
@@ -34,566 +192,219 @@ venv\Scripts\activate
 # Linux/Mac:
 source venv/bin/activate
 
-# Deactivate when done
-deactivate
-```
-
-### 3. Environment Configuration
-```sh
-# Copy environment template
-cp .env.example .env
-
-# Edit .env file with your settings
-# See section below for configuration options
-```
-
-## 1. Choose Your Data Source
-
-You can run the app using either a local JSON file or a PostgreSQL database.
-
-Configuration is handled via the .env file.
-```sh
-cp .env.example .env # create .env file
-```
-
-Here's a sample .env file you can use:
-```
-# Data source (json or db)
-DATA_SOURCE=json
-
-# Database config (used only if DATA_SOURCE=db)
-DB_HOST=catalogue-db
-DB_NAME=catalogue
-DB_USER=devops
-DB_PASSWORD=devops
-```
-
-**Note**
-- Update values in .env as needed (especially DB credentials).
-- Never commit real secrets in .env for production projects. For this learning/demo project, we are keeping .env in GitHub.
-
-### Option A: Use JSON File
-1. Open `.env`.
-2. Set:
-   ```env
-   DATA_SOURCE=json
-   ```
-3. The app will read product data from `products.json`.
-
-### Option B: Use PostgreSQL Database
-1. Open `.env`.
-2. Set:
-   ```env
-   DATA_SOURCE=db
-   ```
-3. Ensure your database credentials in `.env` match your database or Docker Compose settings:
-   ```
-   DB_HOST=catalogue-db
-   DB_NAME=catalogue
-   DB_USER=devops
-   DB_PASSWORD=devops
-   ```
-4. The app will read product data from the PostgreSQL database.
-
-## 3. Install Dependencies & Build
-
-```sh
-# Install Python dependencies
+# Install dependencies
 pip install -r requirements.txt
-
-# Verify installation
-pip list
 ```
 
-## 4. Run the App Locally
+#### Run Locally
+```bash
+# With JSON mode
+DATA_SOURCE=json python app.py
 
-### Development Mode
-```sh
-# Run with Flask development server
-python app.py
+# With PostgreSQL mode
+DATA_SOURCE=db python app.py
 ```
 
-### Production Mode
-```sh
-# Run with Gunicorn (recommended for production)
-gunicorn app:app --bind 0.0.0.0:5000
+## Data Source Details
 
-# Or with multiple workers
-gunicorn app:app --bind 0.0.0.0:5000 --workers 4
-```
+### JSON Mode
+- **Storage**: File-based using `products.json`
+- **Pros**: Simple, no database required, fast startup
+- **Cons**: No concurrent write support, file-based persistence
+- **Use Case**: Development, testing, single-instance deployments
 
-## Docker Setup
+### PostgreSQL Mode
+- **Storage**: Relational database with persistent data
+- **Pros**: Concurrent access, ACID transactions, advanced queries
+- **Cons**: Requires database setup, slightly slower startup
+- **Use Case**: Production, multi-instance deployments, data persistence
 
-### Build & Run with Docker
+### Switching Between Modes
+```bash
+# Switch to JSON mode
+echo "DATA_SOURCE=json" >> .env
+docker-compose up -d
 
-#### 1. Build Docker Image
-```sh
-# From services/catalogue directory
-docker build -t crafty-catalogue-service .
-```
-
-#### 2. Run Docker Container
-```sh
-# Basic run with JSON data
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  -e DATA_SOURCE=json \
-  crafty-catalogue-service
-
-# With environment file
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  --env-file .env \
-  crafty-catalogue-service
-```
-
-### Individual Docker Container Setup
-
-#### 1. Build the Docker Image
-```sh
-# From services/catalogue directory
-docker build -t crafty-catalogue-service .
-```
-
-#### 2. Run Individual Container
-```sh
-# JSON mode (default)
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  -e DATA_SOURCE=json \
-  crafty-catalogue-service
-
-# Database mode
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  -e DATA_SOURCE=db \
-  -e DB_HOST=host.docker.internal \
-  -e DB_NAME=catalogue \
-  -e DB_USER=devops \
-  -e DB_PASSWORD=devops \
-  crafty-catalogue-service
-
-# With volume mounting for development
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  -v $(pwd):/app \
-  -w /app \
-  --env-file .env \
-  python:3.11 \
-  python app.py
-```
-
-#### 3. Run with PostgreSQL
-```sh
-# First, start PostgreSQL
-docker run -d \
-  --name postgres-db \
-  -p 5432:5432 \
-  -e POSTGRES_DB=catalogue \
-  -e POSTGRES_USER=devops \
-  -e POSTGRES_PASSWORD=devops \
-  postgres:15
-
-# Then start catalogue service
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  --link postgres-db:postgres \
-  -e DATA_SOURCE=db \
-  -e DB_HOST=postgres \
-  -e DB_NAME=catalogue \
-  -e DB_USER=devops \
-  -e DB_PASSWORD=devops \
-  crafty-catalogue-service
-```
-
-### Docker Networking - Connecting to Other Services
-
-#### Create a Common Docker Network
-```sh
-# Create a custom network for all services
-docker network create crafty-network
-```
-
-#### Run Services on the Same Network
-```sh
-# 1. Start Catalogue Service
-docker run -d \
-  --name catalogue-service \
-  --network crafty-network \
-  -p 5000:5000 \
-  -e DATA_SOURCE=json \
-  crafty-catalogue-service
-
-# 2. Start Voting Service (connected to catalogue)
-docker run -d \
-  --name voting-service \
-  --network crafty-network \
-  -p 8086:8086 \
-  -e CATALOGUE_SERVICE_URL=http://catalogue-service:5000/api/products \
-  crafty-voting-service
-
-# 3. Start Recommendation Service (connected to catalogue)
-docker run -d \
-  --name recommendation-service \
-  --network crafty-network \
-  -p 8080:8080 \
-  -e CATALOGUE_API_URL=http://catalogue-service:5000/api/products \
-  crafty-recommendation-service
-
-# 4. Start Frontend Service (connected to all)
-docker run -d \
-  --name frontend-service \
-  --network crafty-network \
-  -p 3000:3000 \
-  -e CATALOGUE_BASE_URI=http://catalogue-service:5000 \
-  crafty-frontend-service
-```
-
-#### Inspect Network
-```sh
-# Check network details
-docker network inspect crafty-network
-
-# List containers on network
-docker network ls
-```
-
-## 5. Run only APP in Docker container
-```sh
-docker build -t my-python-app . # Build the image
-docker run -d -p 5000:5000 --env-file .env  my-python-app # Run container with image
-```
-
-## 6. Run the APP and PostgreSQL with Docker Compose
-
-```sh
-docker compose --env-file .env up --build -d
-
-docker compose logs # to view the logs
-```
-- The app will be available at [http://localhost:5000](http://localhost:5000)
-- PostgreSQL will run in a separate container and persist data in a Docker volume.
-
-To stop and remove containers:
-```sh
-docker-compose down
+# Switch to database mode
+echo "DATA_SOURCE=db" >> .env
+docker-compose up -d
 ```
 
 ## API Endpoints
 
-### Catalogue Endpoints
-- `GET /` - Home page
-- `GET /api/products` - Get all products
-- `GET /api/products/:id` - Get specific product
-- `POST /api/products` - Add new product (JSON mode only)
-- `PUT /api/products/:id` - Update product (JSON mode only)
-- `DELETE /api/products/:id` - Delete product (JSON mode only)
-
-### Service Endpoints
-- `GET /health` - Health check
-- `GET /status` - Service status
-
-## Configuration Options
-
-### Environment Variables
-- `DATA_SOURCE`: `json` or `db` (default: json)
-- `DB_HOST`: PostgreSQL host (default: localhost)
-- `DB_NAME`: PostgreSQL database name (default: catalogue)
-- `DB_USER`: PostgreSQL username (default: devops)
-- `DB_PASSWORD`: PostgreSQL password (default: devops)
-- `DB_PORT`: PostgreSQL port (default: 5432)
-
-### Sample .env Configurations
-
-#### JSON Mode
-```env
-DATA_SOURCE=json
-```
-
-#### Database Mode
-```env
-DATA_SOURCE=db
-DB_HOST=localhost
-DB_NAME=catalogue
-DB_USER=devops
-DB_PASSWORD=devops
-DB_PORT=5432
-```
-
-#### Docker Database Mode
-```env
-DATA_SOURCE=db
-DB_HOST=catalogue-db
-DB_NAME=catalogue
-DB_USER=devops
-DB_PASSWORD=devops
-DB_PORT=5432
-```
-
-## Testing
-
-### Local Testing
-```sh
-# Run Python tests (if available)
-python -m pytest
-
-# Manual API testing
+### Get All Products
+```bash
 curl http://localhost:5000/api/products
-curl http://localhost:5000/health
 ```
 
-### Docker Testing
-```sh
-# Test container
-docker exec -it catalogue-service curl http://localhost:5000/api/products
+### Get Specific Product
+```bash
+curl http://localhost:5000/api/products/1
+```
 
-# Test from another container
-docker run --rm --network crafty-network \
-  curlimages/curl \
-  http://catalogue-service:5000/api/products
+### Web Interface
+```bash
+# Open in browser
+open http://localhost:5000
+```
+
+## Database Management
+
+### Database Initialization
+When running in PostgreSQL mode, the database is automatically initialized using `db.create.py` which:
+1. Creates the `products` table with proper schema
+2. Imports data from `products.json`
+3. Handles schema updates safely
+
+### Database Schema
+```sql
+CREATE TABLE products (
+    id INTEGER PRIMARY KEY,
+    name VARCHAR(150) NOT NULL,
+    category VARCHAR(100),
+    difficulty VARCHAR(50),
+    tags JSONB,
+    short_description VARCHAR(300),
+    description VARCHAR(1000),
+    image_url VARCHAR(300),
+    created_at DATE
+);
+```
+
+### Manual Database Operations
+```bash
+# Connect to database
+docker-compose exec postgres psql -U crafty -d catalogue
+
+# Backup database
+docker-compose exec postgres pg_dump -U crafty catalogue > backup.sql
+
+# Restore database
+docker-compose exec -T postgres psql -U crafty catalogue < backup.sql
 ```
 
 ## Troubleshooting
 
+### Service Won't Start
+```bash
+# Check logs
+docker-compose logs catalogue
+
+# Verify environment variables
+docker-compose exec catalogue env
+
+# Check container health
+docker-compose ps
+```
+
+### Database Connection Issues
+```bash
+# Check database logs
+docker-compose logs postgres
+
+# Verify database is ready
+docker-compose exec postgres pg_isready -U crafty -d catalogue
+
+# Test database connection
+docker-compose exec catalogue python -c "import psycopg2; print('DB connection OK')"
+```
+
+### Port Conflicts
+```bash
+# Check what's using the port
+lsof -i :5000
+
+# Use different ports in .env
+CATALOGUE_PORT=5001
+POSTGRES_PORT=5433
+```
+
+### Permission Issues
+```bash
+# Fix file permissions
+chmod +x entrypoint.sh
+
+# Rebuild containers
+docker-compose build --no-cache
+```
+
+## Development
+
+### Project Structure
+```
+catalogue/
+├── app.py              # Main Flask application
+├── db.create.py        # Database initialization script
+├── products.json       # Product data for JSON mode
+├── requirements.txt    # Python dependencies
+├── Dockerfile         # Docker image definition
+├── docker-compose.yml # Docker Compose configuration
+├── entrypoint.sh      # Container entrypoint script
+├── .env.example       # Environment variables template
+└── static/            # Static assets (CSS, images)
+    └── templates/     # HTML templates
+```
+
+### Adding New Products
+- **JSON Mode**: Edit `products.json` directly
+- **Database Mode**: Insert records into PostgreSQL `products` table
+
+### Code Changes
+```bash
+# Rebuild after code changes
+docker-compose build
+
+# Restart services
+docker-compose up -d
+```
+
+## Production Deployment
+
+### Security Considerations
+- Change default database credentials in production
+- Use Docker secrets for sensitive environment variables
+- Run containers as non-root user
+- Use HTTPS in production
+- Implement proper logging and monitoring
+
+### Performance Optimization
+```bash
+# Use production WSGI server
+gunicorn app:app --bind 0.0.0.0:5000 --workers 4
+
+# Enable connection pooling for database
+# Configure PostgreSQL connection limits
+```
+
+### Backup Strategy
+```bash
+# Regular database backups
+docker-compose exec postgres pg_dump -U crafty catalogue > backup_$(date +%Y%m%d).sql
+
+# Volume backups
+docker run --rm -v catalogue_postgres_data:/data -v $(pwd):/backup alpine tar czf /backup/postgres_backup.tar.gz /data
+```
+
+## Support
+
 ### Common Issues
-
-1. **Port 5000 already in use:**
-   ```sh
-   # Find process using port
-   lsof -i :5000  # Linux/Mac
-   netstat -ano | findstr :5000  # Windows
-
-   # Kill process or change port
-   # Edit app.py to change port
-   ```
-
-2. **Database connection issues:**
-   ```sh
-   # Check PostgreSQL status
-   docker ps | grep postgres
-
-   # Check database logs
-   docker logs postgres-db
-
-   # Test database connection
-   docker exec -it postgres-db psql -U devops -d catalogue
-   ```
-
-3. **Permission issues with .env:**
-   ```sh
-   # Fix file permissions
-   chmod 600 .env
-   ```
-
-4. **Module import errors:**
-   ```sh
-   # Reinstall requirements
-   pip uninstall -r requirements.txt
-   pip install -r requirements.txt
-   ```
+1. **Database connection fails**: Check DB_HOST, credentials, and network connectivity
+2. **Service won't start**: Verify environment variables and dependencies
+3. **Port already in use**: Change ports in .env file or stop conflicting services
+4. **Permission denied**: Fix file permissions and user contexts
 
 ### Logs and Debugging
-```sh
-# View application logs
-docker logs catalogue-service
+```bash
+# Enable debug mode
+docker-compose exec catalogue python -c "import logging; logging.basicConfig(level=logging.DEBUG)"
 
-# View logs with follow
-docker logs -f catalogue-service
+# Check Flask logs
+docker-compose logs -f catalogue
 
-# Debug Python app
-docker exec -it catalogue-service python -c "import app; print('App imports successfully')"
-
-# Check environment variables
-docker exec -it catalogue-service env
+# Access container shell
+docker-compose exec catalogue bash
 ```
 
-## Development Workflow
+---
 
-### 1. Code Changes
-```sh
-# Make changes to Python files
-# Test locally
-python app.py
-
-# Test with different data sources
-DATA_SOURCE=json python app.py
-DATA_SOURCE=db python app.py
-```
-
-### 2. Docker Development
-```sh
-# Build and run with volume mounting
-docker run -d \
-  --name catalogue-service \
-  -p 5000:5000 \
-  -v $(pwd):/app \
-  -w /app \
-  --env-file .env \
-  python:3.11 \
-  python app.py
-```
-
-### 3. Database Setup
-```sh
-# Create database (if using local PostgreSQL)
-createdb catalogue
-psql -d catalogue -c "CREATE TABLE IF NOT EXISTS products (...);"
-
-# Or use Docker PostgreSQL
-docker run -d \
-  --name postgres-db \
-  -e POSTGRES_DB=catalogue \
-  -e POSTGRES_USER=devops \
-  -e POSTGRES_PASSWORD=devops \
-  postgres:15
-```
-
-## Deployment
-
-### Production Considerations
-- Use environment variables for configuration
-- Implement proper logging
-- Add health checks
-- Use Docker secrets for database credentials
-- Configure proper resource limits
-- Implement graceful shutdown
-- Use reverse proxy (nginx)
-- Set up SSL/TLS
-
-### Production Docker Run
-```sh
-docker run -d \
-  --name catalogue-service \
-  --restart unless-stopped \
-  -p 5000:5000 \
-  --env-file .env \
-  --memory="512m" \
-  --cpus="1.0" \
-  crafty-catalogue-service
-```
-
-### Docker Compose Production
-```yaml
-version: '3.8'
-services:
-  catalogue-service:
-    build: .
-    ports:
-      - "5000:5000"
-    env_file:
-      - .env
-    environment:
-      - DATA_SOURCE=db
-    depends_on:
-      - postgres-db
-    networks:
-      - crafty-network
-
-  postgres-db:
-    image: postgres:15
-    environment:
-      - POSTGRES_DB=catalogue
-      - POSTGRES_USER=devops
-      - POSTGRES_PASSWORD=devops
-    volumes:
-      - postgres_data:/var/lib/postgresql/data
-    networks:
-      - crafty-network
-
-volumes:
-  postgres_data:
-
-networks:
-  crafty-network:
-    driver: bridge
-```
-
-## Data Management
-
-### JSON Mode
-- Data stored in `products.json`
-- Hot-reloadable (changes take effect immediately)
-- No database setup required
-- Suitable for development and small-scale deployments
-
-### Database Mode
-- Data stored in PostgreSQL
-- Supports concurrent access
-- Data persistence across container restarts
-- Suitable for production deployments
-- Requires database setup and migration
-
-## Service Dependencies
-
-### Dependent Services
-- **Voting Service**: Uses catalogue API to sync origami data
-- **Recommendation Service**: Uses catalogue API to get product data
-- **Frontend Service**: Proxies requests to catalogue API
-
-### Service Communication
-- Provides REST API for product data
-- Supports both JSON and database backends
-- Implements error handling and graceful degradation
-
-## Performance Optimization
-
-### JSON Mode Optimizations
-- File caching for improved performance
-- In-memory data loading
-- Fast read operations
-
-### Database Mode Optimizations
-- Connection pooling
-- Query optimization
-- Database indexing
-- Prepared statements
-
-## Security Considerations
-
-### Basic Security
-- Input validation and sanitization
-- SQL injection prevention (database mode)
-- CORS configuration
-- Rate limiting (can be implemented)
-- Secure headers implementation
-
-### Docker Security
-- Non-root user execution
-- Minimal base image
-- No sensitive data in images
-- Regular security updates
-- Network isolation
-
-## Contributing
-
-### Development Setup
-1. Fork the repository
-2. Clone your fork
-3. Create feature branch
-4. Set up environment (.env file)
-5. Install dependencies
-6. Make changes
-7. Test locally
-8. Submit pull request
-
-### Code Standards
-- Follow PEP 8 style guide
-- Write tests for new features
-- Update documentation
-- Use type hints
-- Handle errors gracefully
-
-## Notes
-- The service supports both JSON file and PostgreSQL database backends
-- JSON mode is suitable for development and small deployments
-- Database mode is recommended for production
-- The service provides REST API for product management
-- Docker networking enables seamless inter-service communication
-- Environment-based configuration for different deployment scenarios
-
+**Note**: This service is designed to work as part of the larger Crafty microservices architecture. For full system deployment, see the main project README.
