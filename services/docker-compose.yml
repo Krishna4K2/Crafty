@@ -8,12 +8,12 @@ services:
     build: ./frontend
     container_name: crafty-frontend
     ports:
-      - "3000:3000"
+      - "${FRONTEND_PORT:-3000}:3000"
     environment:
-      - PRODUCTS_API_BASE_URI=http://catalogue:5000
-      - RECOMMENDATION_BASE_URI=http://recommendation:8080
-      - VOTING_BASE_URI=http://voting:8086
-      - NODE_ENV=production
+      - PRODUCTS_API_BASE_URI=${PRODUCTS_API_BASE_URI:-http://catalogue:5000}
+      - RECOMMENDATION_BASE_URI=${RECOMMENDATION_BASE_URI:-http://recommendation:8080}
+      - VOTING_BASE_URI=${VOTING_BASE_URI:-http://voting:8086}
+      - NODE_ENV=${NODE_ENV:-production}
     networks:
       - crafty-network
     depends_on:
@@ -39,12 +39,12 @@ services:
     ports:
       - "5000:5000"
     environment:
-      - DB_HOST=catalogue-db
-      - DB_NAME=catalogue
-      - DB_USER=user
-      - DB_PASSWORD=password
-      - DATA_SOURCE=json
-      - APP_VERSION=1.0.0
+      - DB_HOST=${DB_HOST:-catalogue-db}
+      - DB_NAME=${DB_NAME:-catalogue}
+      - DB_USER=${DB_USER:-user}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DATA_SOURCE=${DATA_SOURCE:-json}
+      - APP_VERSION=${APP_VERSION:-1.0.0}
     networks:
       - crafty-network
     depends_on:
@@ -62,37 +62,41 @@ services:
     container_name: crafty-catalogue-db
     restart: always
     environment:
-      - POSTGRES_DB=catalogue
-      - POSTGRES_USER=user
-      - POSTGRES_PASSWORD=password
+      - POSTGRES_DB=${POSTGRES_DB:-catalogue}
+      - POSTGRES_USER=${POSTGRES_USER:-user}
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD:-password}
     ports:
-      - "5432:5432"
+      - "${DB_PORT:-5432}:5432"
     volumes:
       - catalogue_data:/var/lib/postgresql/data
     networks:
       - crafty-network
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U user -d catalogue"]
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-user} -d ${POSTGRES_DB:-catalogue}"]
       interval: 30s
       timeout: 10s
       retries: 3
 
   # ====================================================
   # Voting Service - Java/Spring Boot
+  # Database: H2 (default) or MongoDB (set SPRING_PROFILES_ACTIVE=mongodb)
   # ====================================================
   voting:
     build: ./voting
     container_name: crafty-voting
     ports:
-      - "8086:8086"
+      - "${SERVER_PORT:-8086}:8086"
     environment:
-      - SPRING_PROFILES_ACTIVE=default
-      - CATALOGUE_SERVICE_URL=http://catalogue:5000/api/products
-      - SERVER_PORT=8086
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
+      - SPRING_DATA_MONGODB_URI=${SPRING_DATA_MONGODB_URI:-mongodb://voting-db:27017/votingdb}
+      - CATALOGUE_SERVICE_URL=${CATALOGUE_SERVICE_URL:-http://catalogue:5000/api/products}
+      - SERVER_PORT=${SERVER_PORT:-8086}
     networks:
       - crafty-network
     depends_on:
       catalogue:
+        condition: service_healthy
+      voting-db:
         condition: service_healthy
     restart: unless-stopped
     healthcheck:
@@ -102,6 +106,24 @@ services:
       retries: 3
       start_period: 60s
 
+  voting-db:
+    image: mongo:6
+    container_name: crafty-voting-db
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=${MONGODB_DATABASE:-votingdb}
+    ports:
+      - "27017:27017"
+    volumes:
+      - voting_data:/data/db
+    networks:
+      - crafty-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
   # ====================================================
   # Recommendation Service - Go
   # ====================================================
@@ -109,9 +131,9 @@ services:
     build: ./recommendation
     container_name: crafty-recommendation
     ports:
-      - "8080:8080"
+      - "${RECOMMENDATION_PORT:-8080}:8080"
     environment:
-      - CATALOGUE_SERVICE_URL=http://catalogue:5000
+      - CATALOGUE_SERVICE_URL=${CATALOGUE_SERVICE_URL_RECOMMENDATION:-http://catalogue:5000}
     networks:
       - crafty-network
     depends_on:
@@ -126,6 +148,7 @@ services:
 
 volumes:
   catalogue_data:
+  voting_data:
 
 networks:
   crafty-network:

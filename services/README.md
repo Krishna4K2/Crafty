@@ -20,12 +20,29 @@ This directory contains Docker Compose configurations for running the complete C
                     └─────────────────┘
 ```
 
-## 🚀 Quick Start - All Services
+## � Environment Setup
 
 ### Prerequisites
 - Docker & Docker Compose installed
 - At least 4GB RAM available
-- Ports 3000, 5000, 8080, 8086, 5432 available
+- Ports 3000, 5000, 8080, 8086, 5432, 27017 available
+
+### Setup Environment Variables
+```bash
+# Copy the environment template
+cp .env.example .env
+
+# Edit the .env file with your desired configuration
+# WARNING: DO NOT commit .env file to GitHub - it may contain sensitive data
+```
+
+The `.env` file contains all configuration options including:
+- Database settings (PostgreSQL, MongoDB)
+- Service URLs and ports
+- Environment modes (development/production)
+- Database credentials
+
+## 🚀 Quick Start - All Services
 
 ### Start All Services
 ```bash
@@ -50,6 +67,36 @@ docker-compose down
 - **Voting API**: http://localhost:8086
 - **Recommendation API**: http://localhost:8080
 - **Catalogue Database**: localhost:5432
+- **Voting Database (MongoDB)**: localhost:27017
+
+## 🔧 Database Configuration Options
+
+### Catalogue Service
+```bash
+# Edit .env file to configure data source
+# DATA_SOURCE=json (default) or DATA_SOURCE=db (PostgreSQL)
+```
+
+### Voting Service
+```bash
+# Edit .env file to configure database
+# SPRING_PROFILES_ACTIVE=default (H2) or SPRING_PROFILES_ACTIVE=mongodb (MongoDB)
+```
+
+### Combined Configuration
+```bash
+# Lightweight setup (H2 + JSON) - data lost on restart
+# Set in .env: DATA_SOURCE=json, SPRING_PROFILES_ACTIVE=default
+docker-compose up -d
+
+# Persistent setup (MongoDB + PostgreSQL) - data survives restarts
+# Set in .env: DATA_SOURCE=db, SPRING_PROFILES_ACTIVE=mongodb
+docker-compose up -d
+
+# Mixed setup (MongoDB voting + JSON catalogue) - catalogue data lost, voting data persistent
+# Set in .env: DATA_SOURCE=json, SPRING_PROFILES_ACTIVE=mongodb
+docker-compose up -d
+```
 
 ## 🔧 Individual Service Setup
 
@@ -66,31 +113,22 @@ docker-compose --profile full-stack up -d
 ### Catalogue Service
 ```bash
 cd catalogue
-# Run with JSON data source (default)
+# Configure DATA_SOURCE in .env file (json or db)
 docker-compose up -d
-
-# Or run with PostgreSQL
-DATA_SOURCE=db docker-compose up -d
 ```
 
 ### Voting Service
 ```bash
 cd voting
-# Run with H2 in-memory database
+# Configure SPRING_PROFILES_ACTIVE in .env file (default or mongodb)
 docker-compose up -d
-
-# Or run with MongoDB
-SPRING_PROFILES_ACTIVE=mongo docker-compose up -d
 ```
 
 ### Recommendation Service
 ```bash
 cd recommendation
-# Run standalone (needs catalogue service)
+# Configure CATALOGUE_SERVICE_URL_RECOMMENDATION in .env file if needed
 docker-compose up -d
-
-# Or with catalogue service
-docker-compose --profile with-catalogue up -d
 ```
 
 ## 📊 Service Dependencies
@@ -125,7 +163,7 @@ docker-compose logs catalogue
 
 ### Voting Service
 - **H2 Mode**: Data stored in memory (lost on restart)
-- **MongoDB Mode**: Data persisted in `mongo_data` volume
+- **MongoDB Mode**: Data persisted in `voting_data` volume
 
 ## 🔧 Environment Variables
 
@@ -148,8 +186,22 @@ DB_PASSWORD=password     # Database password
 
 ### Voting Service
 ```bash
-SPRING_PROFILES_ACTIVE=default  # default or mongo
+SPRING_PROFILES_ACTIVE=default  # default (H2) or mongodb (MongoDB)
 CATALOGUE_SERVICE_URL=http://catalogue:5000/api/products
+```
+
+#### Database Configuration Options
+
+**H2 Database (Default):**
+```bash
+SPRING_PROFILES_ACTIVE=default
+# Uses in-memory H2 database - data is lost on restart
+```
+
+**MongoDB Database:**
+```bash
+SPRING_PROFILES_ACTIVE=mongodb
+# Uses MongoDB for persistent data storage
 ```
 
 ## 🐛 Troubleshooting
@@ -218,7 +270,9 @@ docker-compose logs -f frontend
 ## 🔒 Security Notes
 
 - Services run with health checks and restart policies
-- Databases use default credentials (change for production)
+- Databases use default credentials (change for production in .env file)
+- **DO NOT commit .env file to GitHub** - it may contain sensitive data like passwords
+- Use strong passwords in production environments
 - No sensitive data is exposed in logs
 - All services communicate over internal Docker network
 
@@ -229,6 +283,3 @@ docker-compose logs -f frontend
 - [Crafty Architecture](../docs/crafty.md)
 
 ---
-
-**Happy Crafting! 🎨**</content>
-<parameter name="filePath">C:\Users\saikr\GithubRepos\Crafty\services\README.md
