@@ -6,7 +6,8 @@ WORKDIR /app
 # Copy Maven wrapper and source code
 COPY . .
 
-RUN chmod +x mvnw
+# Ensure mvnw has proper permissions and line endings
+RUN chmod +x mvnw && sed -i 's/\r$//' mvnw
 # Build the application (skip tests for speed)
 RUN ./mvnw clean package -DskipTests
 
