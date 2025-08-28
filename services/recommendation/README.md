@@ -1,15 +1,34 @@
+# Crafty Recommendation Service
 
-# Crafty Recommendation Service - Complete Setup Guide
+A Go microservice that provides daily origami recommendations by fetching data from the Catalogue Service and returning a random origami as the "origami of the day".
+
+## Table of Contents
+- [Overview](#overview)
+- [Prerequisites](#prerequisites)
+- [Quick Start](#quick-start)
+- [Environment Configuration](#environment-configuration)
+- [API Endpoints](#api-endpoints)
+- [Service Dependencies](#service-dependencies)
+- [Docker Setup](#docker-setup)
+- [Testing](#testing)
+- [Troubleshooting](#troubleshooting)
+- [Development](#development)
+- [Deployment](#deployment)
 
 ## Overview
-The Recommendation Service is a Go microservice that provides daily origami recommendations. It fetches origami data from the Catalogue Service and returns a random origami as the "origami of the day".
+The Recommendation Service is built with:
+- **Go 1.25+** with Gin web framework
+- **Docker** containerization with multi-stage builds
+- **Health checks** and graceful shutdown
+- **Error handling** for external service dependencies
+- **Structured logging** for monitoring and debugging
 
 ## Prerequisites
 - **Go 1.25+** installed and configured
 - **Docker & Docker Compose** (for containerized deployment)
 - **Git** (for cloning the repository)
 
-## Quick Start with Docker Compose (Recommended)
+## Quick Start
 
 ### 1. Environment Setup
 ```bash
@@ -20,7 +39,6 @@ cd services/recommendation
 cp .env.example .env
 
 # Edit .env file with your preferred settings
-# See Environment Configuration section below
 ```
 
 ### 2. Choose Your Setup Mode
@@ -132,157 +150,27 @@ Response:
 
 ## Service Dependencies
 
-**Note:** This recommendation service depends on the catalogue service. It fetches product data from the catalogue service via its API (`/api/products`).
+**Important:** This service depends on the Catalogue Service and fetches product data via its API (`/api/products`).
 
-- Make sure the catalogue service is running and accessible before starting the recommendation service
-- By default, it expects the catalogue API at `http://localhost:5000/api/products`
-- You can override this using the `CATALOGUE_API_URL` environment variable
-- The service includes error handling for catalogue service unavailability
+### Requirements
+- Catalogue service must be running and accessible
+- Default expects catalogue API at `http://localhost:5000/api/products`
+- Override using `CATALOGUE_API_URL` environment variable
 
 ### Error Handling
-The service gracefully handles various error scenarios:
+The service gracefully handles:
 - **Catalogue service unavailable**: Returns appropriate error messages
 - **Empty product data**: Handles cases where no products are available
 - **Network timeouts**: 10-second timeout for external API calls
 - **Invalid responses**: Validates JSON content and structure
 
-## Service Features
-
-### Error Handling & Resilience
-- **Timeout Protection**: HTTP client has 10-second timeout for external API calls
-- **Content Validation**: Validates response content type from catalogue service
-- **Empty Response Handling**: Gracefully handles cases where no data is available
-- **Structured Logging**: Comprehensive logging for debugging and monitoring
-
-### API Endpoints
-- `GET /api/origami-of-the-day` - Returns a random origami recommendation
-- `GET /api/recommendation-status` - Service health check with timestamp
-- `GET /` - Web interface with system information
-
-### Alternative Startup Methods
-The service provides two ways to start:
-
-1. **Standard Method** (default in main.go):
-   ```go
-   func main() {
-       // Standard Gin router setup with graceful shutdown
-   }
-   ```
-
-2. **Alternative Method** (using api.StartAPI()):
-   ```go
-   func main() {
-       api.StartAPI() // Uncomment this line in main.go
-   }
-   ```
-
-## How to Build & Run Recommendation App
-
-### Local Build & Run
-
-- **Build Tool:** Go (Tested with version 1.25+)
-- **Build Command:**
-  ```sh
-  go build -o app
-  ```
-- **Port:** 8080
-- **Launch Command:**
-  ```sh
-  ./app
-  ```
-- **Or Run directly**
-  ```sh
-  go run main.go
-  ```
-
 ## Docker Setup
 
-### Build & Run with Docker
+### Build & Run with Docker Compose (Recommended)
 
-1. **Build Docker Image:**
-   ```sh
-   docker build -t recommendation-app .
-   ```
-2. **Run Docker Container:**
-   ```sh
-   docker run -d -p 8080:8080 -e CATALOGUE_API_URL="http://<catalogue-host>:5000/api/products" recommendation-app
-   ```
-
-### Individual Docker Container Setup
-
-#### 1. Build the Docker Image
-```sh
-# From services/recommendation directory
-docker build -t crafty-recommendation-service .
-```
-
-#### 2. Run Individual Container
-```sh
-# Basic run
-docker run -d \
-  --name recommendation-service \
-  -p 8080:8080 \
-  crafty-recommendation-service
-
-# With custom environment variables
-docker run -d \
-  --name recommendation-service \
-  -p 8080:8080 \
-  -e CATALOGUE_API_URL=http://host.docker.internal:5000/api/products \
-  -e PORT=8080 \
-  crafty-recommendation-service
-```
-
-### Docker Networking - Connecting to Other Services
-
-#### Create a Common Docker Network
-```sh
-# Create a custom network for all services
-docker network create crafty-network
-```
-
-#### Run Services on the Same Network
-```sh
-# 1. Start Catalogue Service
-docker run -d \
-  --name catalogue-service \
-  --network crafty-network \
-  -p 5000:5000 \
-  crafty-catalogue-service
-
-# 2. Start Recommendation Service (connected to catalogue)
-docker run -d \
-  --name recommendation-service \
-  --network crafty-network \
-  -p 8080:8080 \
-  -e CATALOGUE_API_URL=http://catalogue-service:5000/api/products \
-  crafty-recommendation-service
-
-# 3. Start Frontend Service (connected to both)
-docker run -d \
-  --name frontend-service \
-  --network crafty-network \
-  -p 3000:3000 \
-  -e CATALOGUE_BASE_URI=http://catalogue-service:5000 \
-  -e RECOMMENDATION_BASE_URI=http://recommendation-service:8080 \
-  crafty-frontend-service
-```
-
-#### Inspect Network
-```sh
-# Check network details
-docker network inspect crafty-network
-
-# List containers on network
-docker network ls
-```
-
-## Docker Compose Setup (Recommended)
-
-### Quick Start
+#### Quick Start
 ```bash
 # From services/recommendation directory
-# Docker Compose automatically reads ../.env
 docker-compose up -d
 
 # View logs
@@ -292,41 +180,15 @@ docker-compose logs -f recommendation
 docker-compose ps
 ```
 
-### Run with Catalogue Service
+#### Run with Catalogue Service
 ```bash
-# Run both recommendation and catalogue services
+# Run both services together
 docker-compose --profile with-catalogue up -d
 ```
 
-### Stop Services
+#### Stop Services
 ```bash
 docker-compose down
-```
-
-### Docker Compose Configuration
-
-The `docker-compose.yml` file includes:
-- **Recommendation Service**: Go application on port 8080
-- **Catalogue Service**: Optional for standalone testing
-- **Health Checks**: Automatic service monitoring
-- **Networking**: Isolated container network
-
-#### Environment Variables
-```bash
-CATALOGUE_API_URL=http://localhost:5000  # Catalogue service URL
-PORT=8080                                   # Service port
-```
-
-#### Service Health Checks
-```bash
-# Check service status
-docker-compose ps
-
-# View health logs
-docker-compose logs recommendation
-
-# Manual health check
-curl http://localhost:8080
 ```
 
 ### Individual Docker Container Setup
@@ -363,228 +225,47 @@ docker run -d \
   crafty-recommendation
 ```
 
-### Troubleshooting Docker Compose
+### Docker Networking
 
-#### Service Won't Start
+#### Create Network for Multi-Service Setup
 ```bash
-# Check service logs
-docker-compose logs recommendation
+# Create custom network
+docker network create crafty-network
 
-# Verify environment variables
-docker-compose exec recommendation env
+# Run services on same network
+docker run -d \
+  --name catalogue-service \
+  --network crafty-network \
+  -p 5000:5000 \
+  crafty-catalogue
 
-# Check container health
-docker-compose ps
-```
-
-#### Catalogue Connection Issues
-```bash
-# Check catalogue service
-docker-compose logs catalogue
-
-# Test catalogue connectivity
-docker-compose exec recommendation curl http://localhost:5000/api/products
-```
-
-#### Reset Everything
-```bash
-# Stop and remove containers
-docker-compose down
-
-# Clean rebuild
-docker-compose build --no-cache
-docker-compose up -d
-```
-
-### Docker Compose for Multi-Service Setup
-
-#### Create docker-compose.yml
-```yaml
-# docker-compose.yml (create in services/recommendation/)
-version: '3.8'
-services:
-  recommendation-service:
-    build: .
-    ports:
-      - "8080:8080"
-    environment:
-      - CATALOGUE_API_URL=http://catalogue-service:5000/api/products
-    depends_on:
-      - catalogue-service
-    networks:
-      - crafty-network
-
-  catalogue-service:
-    # ... catalogue service config
-    networks:
-      - crafty-network
-
-networks:
-  crafty-network:
-    driver: bridge
-```
-
-#### Run with Docker Compose
-```sh
-docker-compose up --build
-```
-
-## Service Dependency
-
-**Note:** This recommendation service depends on the catalogue service. It fetches product data from the catalogue service via its API (`/api/products`).
-
-- Make sure the catalogue service is running and accessible before starting the recommendation service.
-- By default, it expects the catalogue API at `http://localhost:5000/api/products`. You can override this using the `CATALOGUE_API_URL` environment variable.
-
-## Environment Variables
-
-- `CATALOGUE_API_URL` (optional): Set this to the catalogue service API endpoint if not running on localhost:5000.
-- `PORT` (optional): Set the port for the service (default: 8080).
-
-## Endpoints
-
-- `/` : Home page
-- `/api/origami-of-the-day` : Get a random origami product from catalogue
-- `/api/recommendation-status` : Service status
-
-## Configuration
-
-### config.json
-The service uses a configuration file (`config.json`) for basic settings:
-
-```json
-{
-  "version": "1.0.0"
-}
+docker run -d \
+  --name recommendation-service \
+  --network crafty-network \
+  -p 8080:8080 \
+  -e CATALOGUE_API_URL=http://catalogue-service:5000/api/products \
+  crafty-recommendation
 ```
 
 ## Testing
 
 ### Local Testing
-```sh
-# Run tests
+```bash
+# Run all tests
 go test ./...
 
 # Run with verbose output
 go test -v ./...
 
-# Run specific test
-go test -run TestSpecificFunction
-```
-
-### API Testing
-```sh
-# Test health endpoint
-curl http://localhost:8080/api/recommendation-status
-
-# Test origami of the day
-curl http://localhost:8080/api/origami-of-the-day
-
-# Test home page
-curl http://localhost:8080/
-```
-
-## Troubleshooting
-
-### Common Issues
-
-1. **Cannot connect to Catalogue Service:**
-   ```sh
-   # Check if catalogue service is running
-   curl http://localhost:5000/api/products
-
-   # Check Docker network connectivity
-   docker network inspect crafty-network
-   ```
-
-2. **Port 8080 already in use:**
-   ```sh
-   # Find process using port
-   lsof -i :8080  # Linux/Mac
-   netstat -ano | findstr :8080  # Windows
-
-   # Change port
-   export PORT=8081
-   ```
-
-3. **Go module issues:**
-   ```sh
-   # Clean module cache
-   go clean -modcache
-
-   # Reinitialize modules
-   rm go.mod go.sum
-   go mod init recommendation
-   go mod tidy
-   ```
-
-### Logs and Debugging
-```sh
-# View application logs
-docker logs recommendation-service
-
-# View logs with follow
-docker logs -f recommendation-service
-
-# Debug mode (if implemented)
-docker run -d \
-  --name recommendation-service \
-  -p 8080:8080 \
-  -e DEBUG=true \
-  crafty-recommendation-service
-```
-
-## Development Workflow
-
-### 1. Code Changes
-```sh
-# Make changes to Go files
-# Test locally
-go run main.go
-
-# Build and test
-go build -o app
-./app
-```
-
-### 2. Docker Development
-```sh
-# Build and run with volume mounting for development
-docker run -d \
-  --name recommendation-service \
-  -p 8080:8080 \
-  -v $(pwd):/app \
-  -w /app \
-  crafty-recommendation-service \
-  go run main.go
-```
-
-## Testing
-
-### Running Tests
-```sh
-# Run all tests
-go test ./...
-
-# Run tests with verbose output
-go test -v ./...
-
 # Run specific test file
 go test -v ./tests/
 
-# Run tests with coverage
+# Run with coverage
 go test -cover ./...
 ```
 
-### Test Coverage
-The service includes tests for:
-- API endpoint functionality
-- Service status endpoint
-- Error handling scenarios
-- Alternative startup methods
-
-### Manual Testing
-```sh
+### API Testing
+```bash
 # Test health endpoint
 curl http://localhost:8080/api/recommendation-status
 
@@ -595,18 +276,131 @@ curl http://localhost:8080/api/origami-of-the-day
 curl http://localhost:8080/
 ```
 
+### Manual Testing Checklist
+- [ ] Service starts without errors
+- [ ] Health endpoint returns operational status
+- [ ] Origami endpoint returns valid JSON
+- [ ] Web interface loads correctly
+- [ ] Error handling works for invalid catalogue URLs
+
+## Troubleshooting
+
+### Common Issues
+
+#### 1. Cannot Connect to Catalogue Service
+```bash
+# Check if catalogue service is running
+curl http://localhost:5000/api/products
+
+# Check Docker network connectivity
+docker network inspect crafty-network
+
+# Verify environment variables
+docker-compose exec recommendation env | grep CATALOGUE
+```
+
+#### 2. Port Already in Use
+```bash
+# Find process using port
+lsof -i :8080  # Linux/Mac
+netstat -ano | findstr :8080  # Windows
+
+# Change port in .env file
+PORT=8081
+```
+
+#### 3. Go Module Issues
+```bash
+# Clean module cache
+go clean -modcache
+
+# Reinitialize modules
+rm go.mod go.sum
+go mod init recommendation
+go mod tidy
+```
+
+### Logs and Debugging
+```bash
+# View application logs
+docker-compose logs recommendation
+
+# Follow logs in real-time
+docker-compose logs -f recommendation
+
+# Check container health
+docker-compose ps
+```
+
+### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+## Development
+
+### Local Development
+```bash
+# Run directly
+go run main.go
+
+# Build and run
+go build -o app
+./app
+```
+
+### Docker Development
+```bash
+# Build with volume mounting for live reload
+docker run -d \
+  --name recommendation-dev \
+  -p 8080:8080 \
+  -v $(pwd):/app \
+  -w /app \
+  crafty-recommendation \
+  go run main.go
+```
+
+### Code Structure
+```
+services/recommendation/
+├── main.go              # Application entry point
+├── api/
+│   └── api.go          # API handlers and routes
+├── data/
+│   └── data.go         # External API communication
+├── static/              # Static assets (CSS, images)
+├── templates/           # HTML templates
+├── tests/               # Unit tests
+├── docker-compose.yml   # Docker orchestration
+├── Dockerfile          # Container build configuration
+├── entrypoint.sh       # Container startup script
+└── config.json         # Application configuration
+```
+
+### Configuration Files
+- `config.json`: Application version and basic settings
+- `.env`: Environment variables for local development
+- `.env.example`: Template for environment configuration
+
 ## Deployment
 
 ### Production Considerations
-- Use environment variables for configuration
-- Implement proper logging
-- Add health checks
-- Use Docker secrets for sensitive data
-- Configure proper resource limits
-- Implement graceful shutdown
+- [ ] Use environment variables for configuration
+- [ ] Implement proper logging and monitoring
+- [ ] Add health checks and readiness probes
+- [ ] Use Docker secrets for sensitive data
+- [ ] Configure resource limits and requests
+- [ ] Implement graceful shutdown procedures
+- [ ] Set up proper networking and service discovery
 
 ### Production Docker Run
-```sh
+```bash
 docker run -d \
   --name recommendation-service \
   --restart unless-stopped \
@@ -615,13 +409,12 @@ docker run -d \
   -e PORT=8080 \
   --memory="256m" \
   --cpus="0.5" \
-  crafty-recommendation-service
+  crafty-recommendation
 ```
 
 ## Notes
-- The service requires Go 1.25+ for optimal performance
-- Ensure the catalogue service is running before starting this service
-- The service fetches data from the catalogue service on each request
+- Service requires Go 1.25+ for optimal performance
+- Ensure catalogue service is running before starting
+- Service fetches data from catalogue on each request
 - For high-traffic scenarios, consider implementing caching
-- The random selection algorithm can be enhanced for better recommendation logic
- 
+- Random selection algorithm can be enhanced for better recommendations
