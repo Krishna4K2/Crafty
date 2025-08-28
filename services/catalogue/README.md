@@ -264,6 +264,104 @@ docker network inspect crafty-network
 docker network ls
 ```
 
+## Docker Compose Setup (Recommended)
+
+### Quick Start
+```bash
+# From services/catalogue directory
+docker-compose up -d
+
+# View logs
+docker-compose logs -f catalogue
+
+# Check service health
+docker-compose ps
+```
+
+### Run with PostgreSQL Database
+```bash
+# Set environment variable for database mode
+DATA_SOURCE=db docker-compose up -d
+
+# Or export the variable
+export DATA_SOURCE=db
+docker-compose up -d
+```
+
+### Stop Services
+```bash
+docker-compose down
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file includes:
+- **Catalogue Service**: Python Flask application on port 5000
+- **PostgreSQL Database**: Optional persistent storage on port 5432
+- **Health Checks**: Automatic service monitoring
+- **Networking**: Isolated container network
+
+#### Environment Variables
+```bash
+DATA_SOURCE=json          # json or db (default: json)
+DB_HOST=catalogue-db      # PostgreSQL hostname
+DB_NAME=catalogue         # Database name
+DB_USER=user             # Database user
+DB_PASSWORD=password     # Database password
+APP_VERSION=1.0.0        # Application version
+```
+
+#### Service Health Checks
+```bash
+# Check service status
+docker-compose ps
+
+# View health logs
+docker-compose logs catalogue
+
+# Manual health check
+curl http://localhost:5000/api/products
+```
+
+### Troubleshooting Docker Compose
+
+#### Database Connection Issues
+```bash
+# Check database logs
+docker-compose logs catalogue-db
+
+# Verify database is ready
+docker-compose exec catalogue-db pg_isready -U user -d catalogue
+
+# Restart database
+docker-compose restart catalogue-db
+```
+
+#### Service Won't Start
+```bash
+# Check service logs
+docker-compose logs catalogue
+
+# Verify environment variables
+docker-compose exec catalogue env
+
+# Check container health
+docker-compose ps
+```
+
+#### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
 ## 5. Run only APP in Docker container
 ```sh
 docker build -t my-python-app . # Build the image

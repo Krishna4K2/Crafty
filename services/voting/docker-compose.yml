@@ -1,25 +1,49 @@
 version: "3.8"
 
 services:
-  voting-app:
+  voting:
     build: .
-    container_name: voting-app
+    container_name: crafty-voting
     ports:
       - "8086:8086"
     environment:
-      # Always use MongoDB profile in Compose
-      - SPRING_PROFILES_ACTIVE=mongo
+      - SPRING_PROFILES_ACTIVE=${SPRING_PROFILES_ACTIVE:-default}
       - SPRING_DATA_MONGODB_URI=mongodb://mongo:27017/votingdb
+      - CATALOGUE_SERVICE_URL=http://localhost:5000/api/products
+      - SERVER_PORT=8086
+    networks:
+      - voting-network
     depends_on:
       - mongo
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8086/actuator/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
   mongo:
     image: mongo:6
-    container_name: voting-mongo
+    container_name: crafty-voting-db
+    restart: always
+    environment:
+      - MONGO_INITDB_DATABASE=votingdb
     ports:
       - "27017:27017"
     volumes:
       - mongo_data:/data/db
+    networks:
+      - voting-network
+    healthcheck:
+      test: ["CMD", "mongosh", "--eval", "db.adminCommand('ping')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
 
 volumes:
   mongo_data:
+
+networks:
+  voting-network:
+    driver: bridge

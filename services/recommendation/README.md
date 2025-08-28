@@ -150,6 +150,124 @@ docker network inspect crafty-network
 docker network ls
 ```
 
+## Docker Compose Setup (Recommended)
+
+### Quick Start
+```bash
+# From services/recommendation directory
+docker-compose up -d
+
+# View logs
+docker-compose logs -f recommendation
+
+# Check service health
+docker-compose ps
+```
+
+### Run with Catalogue Service
+```bash
+# Run both recommendation and catalogue services
+docker-compose --profile with-catalogue up -d
+```
+
+### Stop Services
+```bash
+docker-compose down
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file includes:
+- **Recommendation Service**: Go application on port 8080
+- **Catalogue Service**: Optional for standalone testing
+- **Health Checks**: Automatic service monitoring
+- **Networking**: Isolated container network
+
+#### Environment Variables
+```bash
+CATALOGUE_SERVICE_URL=http://localhost:5000  # Catalogue service URL
+PORT=8080                                   # Service port
+```
+
+#### Service Health Checks
+```bash
+# Check service status
+docker-compose ps
+
+# View health logs
+docker-compose logs recommendation
+
+# Manual health check
+curl http://localhost:8080
+```
+
+### Individual Docker Container Setup
+
+#### 1. Build Docker Image
+```bash
+# From services/recommendation directory
+docker build -t crafty-recommendation .
+```
+
+#### 2. Run Standalone
+```bash
+docker run -d \
+  --name crafty-recommendation \
+  -p 8080:8080 \
+  -e CATALOGUE_SERVICE_URL=http://localhost:5000 \
+  crafty-recommendation
+```
+
+#### 3. Run with Catalogue Service
+```bash
+# Start catalogue service first
+docker run -d \
+  --name crafty-catalogue \
+  -p 5000:5000 \
+  crafty-catalogue
+
+# Start recommendation service
+docker run -d \
+  --name crafty-recommendation \
+  -p 8080:8080 \
+  --link crafty-catalogue:catalogue \
+  -e CATALOGUE_SERVICE_URL=http://catalogue:5000 \
+  crafty-recommendation
+```
+
+### Troubleshooting Docker Compose
+
+#### Service Won't Start
+```bash
+# Check service logs
+docker-compose logs recommendation
+
+# Verify environment variables
+docker-compose exec recommendation env
+
+# Check container health
+docker-compose ps
+```
+
+#### Catalogue Connection Issues
+```bash
+# Check catalogue service
+docker-compose logs catalogue
+
+# Test catalogue connectivity
+docker-compose exec recommendation curl http://localhost:5000/api/products
+```
+
+#### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
 ### Docker Compose for Multi-Service Setup
 
 #### Create docker-compose.yml

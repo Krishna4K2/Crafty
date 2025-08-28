@@ -220,6 +220,137 @@ docker network inspect crafty-network
 docker network ls
 ```
 
+## Docker Compose Setup (Recommended)
+
+### Quick Start
+```bash
+# From services/voting directory
+docker-compose up -d
+
+# View logs
+docker-compose logs -f voting
+
+# Check service health
+docker-compose ps
+```
+
+### Run with MongoDB Database
+```bash
+# The docker-compose.yml is configured to use MongoDB by default
+# If you want to use H2 instead, modify SPRING_PROFILES_ACTIVE
+SPRING_PROFILES_ACTIVE=default docker-compose up -d
+```
+
+### Stop Services
+```bash
+docker-compose down
+```
+
+### Docker Compose Configuration
+
+The `docker-compose.yml` file includes:
+- **Voting Service**: Java Spring Boot application on port 8086
+- **MongoDB Database**: Persistent storage on port 27017
+- **Health Checks**: Automatic service monitoring
+- **Networking**: Isolated container network
+
+#### Environment Variables
+```bash
+SPRING_PROFILES_ACTIVE=default    # default or mongodb
+CATALOGUE_SERVICE_URL=http://localhost:5000/api/products
+SERVER_PORT=8086
+MONGODB_URI=mongodb://mongo:27017/votingdb
+```
+
+#### Service Health Checks
+```bash
+# Check service status
+docker-compose ps
+
+# View health logs
+docker-compose logs voting
+
+# Manual health check
+curl http://localhost:8086/actuator/health
+```
+
+### Individual Docker Container Setup
+
+#### 1. Build Docker Image
+```bash
+# From services/voting directory
+docker build -t crafty-voting .
+```
+
+#### 2. Run with H2 Database (Standalone)
+```bash
+docker run -d \
+  --name crafty-voting \
+  -p 8086:8086 \
+  -e SPRING_PROFILES_ACTIVE=default \
+  -e CATALOGUE_SERVICE_URL=http://localhost:5000/api/products \
+  crafty-voting
+```
+
+#### 3. Run with MongoDB (Standalone)
+```bash
+# Start MongoDB first
+docker run -d \
+  --name crafty-voting-db \
+  -p 27017:27017 \
+  -e MONGO_INITDB_DATABASE=votingdb \
+  mongo:6
+
+# Start voting service
+docker run -d \
+  --name crafty-voting \
+  -p 8086:8086 \
+  --link crafty-voting-db:mongo \
+  -e SPRING_PROFILES_ACTIVE=mongodb \
+  -e MONGODB_URI=mongodb://mongo:27017/votingdb \
+  -e CATALOGUE_SERVICE_URL=http://localhost:5000/api/products \
+  crafty-voting
+```
+
+### Troubleshooting Docker Compose
+
+#### Database Connection Issues
+```bash
+# Check MongoDB logs
+docker-compose logs mongo
+
+# Verify MongoDB is ready
+docker-compose exec mongo mongosh --eval "db.adminCommand('ping')"
+
+# Restart database
+docker-compose restart mongo
+```
+
+#### Service Won't Start
+```bash
+# Check service logs
+docker-compose logs voting
+
+# Verify environment variables
+docker-compose exec voting env
+
+# Check container health
+docker-compose ps
+```
+
+#### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Remove volumes (WARNING: deletes data)
+docker-compose down -v
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
 ### Docker Compose for Multi-Service Setup
 
 #### Using Docker Compose (Recommended)

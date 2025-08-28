@@ -86,25 +86,25 @@ npm start
 #### 1. Build Docker Image
 ```sh
 # From services/frontend directory
-docker build -t crafty-frontend-service .
+docker build -t crafty-frontend .
 ```
 
 #### 2. Run Docker Container
 ```sh
 # Basic run
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   -p 3000:3000 \
-  crafty-frontend-service
+  crafty-frontend
 
 # With environment variables
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   -p 3000:3000 \
-  -e CATALOGUE_BASE_URI=http://host.docker.internal:5000 \
+  -e PRODUCTS_API_BASE_URI=http://host.docker.internal:5000 \
   -e VOTING_BASE_URI=http://host.docker.internal:8086 \
   -e RECOMMENDATION_BASE_URI=http://host.docker.internal:8080 \
-  crafty-frontend-service
+  crafty-frontend
 ```
 
 ### Individual Docker Container Setup
@@ -112,41 +112,41 @@ docker run -d \
 #### 1. Build the Docker Image
 ```sh
 # From services/frontend directory
-docker build -t crafty-frontend-service .
+docker build -t crafty-frontend .
 ```
 
 #### 2. Run Individual Container
 ```sh
 # Basic run
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   -p 3000:3000 \
-  crafty-frontend-service
+  crafty-frontend
 
 # With custom environment variables
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   -p 3000:3000 \
-  -e CATALOGUE_BASE_URI=http://host.docker.internal:5000 \
+  -e PRODUCTS_API_BASE_URI=http://host.docker.internal:5000 \
   -e VOTING_BASE_URI=http://host.docker.internal:8086 \
   -e RECOMMENDATION_BASE_URI=http://host.docker.internal:8080 \
   -e PORT=3000 \
-  crafty-frontend-service
+  crafty-frontend
 ```
 
 #### 3. Development with Volume Mounting
 ```sh
 # Mount source code for development
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   -p 3000:3000 \
   -v $(pwd):/app \
   -w /app \
-  -e CATALOGUE_BASE_URI=http://host.docker.internal:5000 \
+  -e PRODUCTS_API_BASE_URI=http://host.docker.internal:5000 \
   -e VOTING_BASE_URI=http://host.docker.internal:8086 \
   -e RECOMMENDATION_BASE_URI=http://host.docker.internal:8080 \
-  node:21 \
-  npm start
+  node:18-alpine \
+  sh -c "npm install && npm start"
 ```
 
 ### Docker Networking - Connecting to Other Services
@@ -161,34 +161,34 @@ docker network create crafty-network
 ```sh
 # 1. Start Catalogue Service
 docker run -d \
-  --name catalogue-service \
+  --name catalogue \
   --network crafty-network \
   -p 5000:5000 \
-  crafty-catalogue-service
+  crafty-catalogue
 
 # 2. Start Voting Service
 docker run -d \
-  --name voting-service \
+  --name voting \
   --network crafty-network \
   -p 8086:8086 \
-  crafty-voting-service
+  crafty-voting
 
 # 3. Start Recommendation Service
 docker run -d \
-  --name recommendation-service \
+  --name recommendation \
   --network crafty-network \
   -p 8080:8080 \
-  crafty-recommendation-service
+  crafty-recommendation
 
 # 4. Start Frontend Service (connected to all)
 docker run -d \
-  --name frontend-service \
+  --name crafty-frontend \
   --network crafty-network \
   -p 3000:3000 \
-  -e CATALOGUE_BASE_URI=http://catalogue-service:5000 \
-  -e VOTING_BASE_URI=http://voting-service:8086 \
-  -e RECOMMENDATION_BASE_URI=http://recommendation-service:8080 \
-  crafty-frontend-service
+  -e PRODUCTS_API_BASE_URI=http://catalogue:5000 \
+  -e VOTING_BASE_URI=http://voting:8086 \
+  -e RECOMMENDATION_BASE_URI=http://recommendation:8080 \
+  crafty-frontend
 ```
 
 #### Inspect Network
@@ -198,6 +198,252 @@ docker network inspect crafty-network
 
 # List containers on network
 docker network ls
+```
+
+### Docker Compose Setup (Recommended)
+
+#### Quick Start
+```bash
+# From services/frontend directory
+docker-compose up -d
+
+# View logs
+docker-compose logs -f frontend
+
+# Check service health
+docker-compose ps
+```
+
+#### Run with Full Stack (for testing)
+```bash
+# Run frontend with all dependent services
+docker-compose --profile full-stack up -d
+```
+
+#### Stop Services
+```bash
+docker-compose down
+```
+
+#### Docker Compose Configuration
+
+The `docker-compose.yml` file includes:
+- **Frontend Service**: Node.js/Express.js application on port 3000
+- **Catalogue Service**: Optional for standalone testing
+- **Voting Service**: Optional for standalone testing
+- **Recommendation Service**: Optional for standalone testing
+- **Health Checks**: Automatic service monitoring
+- **Networking**: Isolated container network
+
+#### Environment Variables
+```bash
+PRODUCTS_API_BASE_URI=http://localhost:5000     # Catalogue service URL
+RECOMMENDATION_BASE_URI=http://localhost:8080   # Recommendation service URL
+VOTING_BASE_URI=http://localhost:8086           # Voting service URL
+NODE_ENV=production                             # Environment mode
+PORT=3000                                       # Service port
+```
+
+#### Service Health Checks
+```bash
+# Check service status
+docker-compose ps
+
+# View health logs
+docker-compose logs frontend
+
+# Manual health check
+curl http://localhost:3000
+```
+
+### Individual Docker Container Setup
+
+#### 1. Build Docker Image
+```bash
+# From services/frontend directory
+docker build -t crafty-frontend .
+```
+
+#### 2. Run Standalone
+```bash
+docker run -d \
+  --name crafty-frontend \
+  -p 3000:3000 \
+  -e PRODUCTS_API_BASE_URI=http://localhost:5000 \
+  -e VOTING_BASE_URI=http://localhost:8086 \
+  -e RECOMMENDATION_BASE_URI=http://localhost:8080 \
+  crafty-frontend
+```
+
+#### 3. Run with Dependent Services
+```bash
+# Start all services from services/ directory
+cd ..
+docker-compose up -d
+```
+
+### Troubleshooting Docker Compose
+
+#### Service Won't Start
+```bash
+# Check service logs
+docker-compose logs frontend
+
+# Verify environment variables
+docker-compose exec frontend env
+
+# Check container health
+docker-compose ps
+```
+
+#### Backend Connection Issues
+```bash
+# Check backend service logs
+docker-compose logs catalogue voting recommendation
+
+# Test backend connectivity
+docker-compose exec frontend curl http://localhost:5000/api/products
+```
+
+#### Reset Everything
+```bash
+# Stop and remove containers
+docker-compose down
+
+# Clean rebuild
+docker-compose build --no-cache
+docker-compose up -d
+```
+
+### Docker Compose for Multi-Service Setup
+docker-compose up -d
+
+# View logs
+docker-compose logs -f frontend
+
+# Stop all services
+docker-compose down
+```
+
+### Environment Variables
+
+The container expects these environment variables:
+
+```bash
+# Service URLs (from config.json)
+PRODUCTS_API_BASE_URI=http://catalogue:5000
+RECOMMENDATION_BASE_URI=http://recommendation:8080
+VOTING_BASE_URI=http://voting:8086
+
+# Optional: Port configuration
+PORT=3000
+NODE_ENV=production
+```
+
+### Docker Image Details
+
+#### Multi-Stage Build Benefits
+- **Builder Stage**: Installs all dependencies and prepares the app
+- **Production Stage**: Creates minimal runtime image (~60MB vs ~250MB)
+- **Security**: Runs as non-root user with proper signal handling
+- **Performance**: Optimized layer caching and health checks
+
+#### Image Size Optimization
+- **Without multi-stage**: ~250MB (includes dev dependencies)
+- **With multi-stage**: ~80MB (production-only dependencies)
+- **Alpine Linux**: Further reduces to ~60MB
+
+### Debugging Docker Containers
+
+#### Check Container Logs
+```sh
+docker logs crafty-frontend
+```
+
+#### Access Container Shell
+```sh
+docker exec -it crafty-frontend sh
+```
+
+#### Health Check
+```sh
+docker ps  # Check STATUS column for health
+docker inspect crafty-frontend | grep -A 10 "Health"
+```
+
+#### View Running Processes
+```sh
+docker top crafty-frontend
+```
+
+### Production Considerations
+
+#### Resource Limits
+```sh
+docker run -d \
+  --name crafty-frontend \
+  --memory="256m" \
+  --cpus="0.5" \
+  -p 3000:3000 \
+  crafty-frontend
+```
+
+#### Restart Policy
+```sh
+docker run -d \
+  --name crafty-frontend \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  crafty-frontend
+```
+
+#### Logging
+```sh
+# Mount log volume
+docker run -d \
+  --name crafty-frontend \
+  -v /var/log/crafty-frontend:/app/logs \
+  -p 3000:3000 \
+  crafty-frontend
+```
+
+### Troubleshooting
+
+#### Common Issues
+
+1. **Port already in use**
+   ```sh
+   # Find process using port 3000
+   netstat -tulpn | grep :3000
+   # Kill the process or use different port
+   docker run -p 3001:3000 crafty-frontend
+   ```
+
+2. **Environment variables not working**
+   ```sh
+   # Check environment inside container
+   docker exec crafty-frontend env
+   ```
+
+3. **Service connectivity issues**
+   ```sh
+   # Test connection to other services
+   docker exec crafty-frontend curl http://catalogue:5000/api/products
+   ```
+
+4. **Permission issues**
+   ```sh
+   # Check file permissions
+   docker exec crafty-frontend ls -la /app
+   ```
+
+#### Health Check Failures
+```sh
+# Manual health check
+docker exec crafty-frontend node --version
+
+# Check health status
+docker inspect crafty-frontend | jq '.[].State.Health'
 ```
 
 ### Docker Compose for Multi-Service Setup
