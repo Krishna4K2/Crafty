@@ -19,10 +19,10 @@ with open('products.json', 'r') as f:
 
 def get_db_connection():
     conn = psycopg2.connect(
-        host=os.getenv("DB_HOST", "localhost"),
-        database=os.getenv("DB_NAME", "products"),
-        user=os.getenv("DB_USER", "user"),
-        password=os.getenv("DB_PASSWORD", "password")
+        host=os.getenv("DB_HOST", "catalogue-db"),
+        database=os.getenv("DB_NAME", "catalogue"),
+        user=os.getenv("DB_USER", "crafty"),
+        password=os.getenv("DB_PASSWORD", "crafty")
     )
     return conn
 
@@ -67,11 +67,35 @@ def get_products():
 
 @app.route('/api/products/<int:product_id>', methods=['GET'])
 def get_product(product_id):
-    product = next((product for product in products if product['id'] == product_id), None)
-    if product is not None:
-        return jsonify(product)
+    data_source = os.getenv("DATA_SOURCE", "json")  # Default to json
+    if data_source == "db":
+        conn = get_db_connection()
+        cur = conn.cursor()
+        cur.execute('SELECT id, name, category, difficulty, tags, short_description, description, image_url, created_at FROM products WHERE id = %s;', (product_id,))
+        db_product = cur.fetchone()
+        cur.close()
+        conn.close()
+        if db_product:
+            product = {
+                'id': db_product[0],
+                'name': db_product[1],
+                'category': db_product[2],
+                'difficulty': db_product[3],
+                'tags': db_product[4],
+                'short_description': db_product[5],
+                'description': db_product[6],
+                'image_url': db_product[7],
+                'created_at': str(db_product[8]) if db_product[8] else None
+            }
+            return jsonify(product)
+        else:
+            return jsonify({'message': 'Product not found'}), 404
     else:
-        return jsonify({'message': 'Product not found'}), 404
+        product = next((product for product in products if product['id'] == product_id), None)
+        if product is not None:
+            return jsonify(product)
+        else:
+            return jsonify({'message': 'Product not found'}), 404
 
 def get_system_info():
     hostname = socket.gethostname()
