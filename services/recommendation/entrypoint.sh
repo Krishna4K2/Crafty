@@ -8,7 +8,6 @@ echo "Port: $PORT"
 # Wait for catalogue service if URL contains localhost (for development)
 if echo "$CATALOGUE_API_URL" | grep -q "localhost"; then
     echo "Running in development mode - checking catalogue service availability..."
-
     # Simple check if catalogue service is responding
     if curl -f -s "$CATALOGUE_API_URL" > /dev/null 2>&1; then
         echo "Catalogue service is available"
