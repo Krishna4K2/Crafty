@@ -225,6 +225,7 @@ docker network ls
 ### Quick Start
 ```bash
 # From services/voting directory
+# Docker Compose automatically reads ../.env
 docker-compose up -d
 
 # View logs

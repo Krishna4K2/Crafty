@@ -36,6 +36,17 @@ cp .env.example .env
 # WARNING: DO NOT commit .env file to GitHub - it may contain sensitive data
 ```
 
+**Note:** Docker Compose automatically loads the `.env` file from the current directory. You don't need to specify `--env-file .env` unless you're using a different filename or location.
+
+If you need to use a different environment file:
+```bash
+# Use a different .env file
+docker-compose --env-file .env.production up -d
+
+# Use multiple env files
+docker-compose --env-file .env --env-file .env.production up -d
+```
+
 The `.env` file contains all configuration options including:
 - Database settings (PostgreSQL, MongoDB)
 - Service URLs and ports
@@ -47,7 +58,11 @@ The `.env` file contains all configuration options including:
 ### Start All Services
 ```bash
 # From services/ directory
+# Docker Compose automatically reads .env file
 docker-compose up -d
+
+# Or explicitly specify the env file
+docker-compose --env-file .env up -d
 
 # View logs
 docker-compose logs -f
@@ -114,6 +129,7 @@ docker-compose --profile full-stack up -d
 ```bash
 cd catalogue
 # Configure DATA_SOURCE in .env file (json or db)
+# Docker Compose automatically reads ../.env
 docker-compose up -d
 ```
 
@@ -121,6 +137,7 @@ docker-compose up -d
 ```bash
 cd voting
 # Configure SPRING_PROFILES_ACTIVE in .env file (default or mongodb)
+# Docker Compose automatically reads ../.env
 docker-compose up -d
 ```
 
@@ -128,6 +145,7 @@ docker-compose up -d
 ```bash
 cd recommendation
 # Configure CATALOGUE_SERVICE_URL_RECOMMENDATION in .env file if needed
+# Docker Compose automatically reads ../.env
 docker-compose up -d
 ```
 
